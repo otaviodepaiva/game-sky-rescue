@@ -1,0 +1,1974 @@
+:root {
+    color-scheme: dark;
+    font-family: 'Courier New', Courier, monospace;
+    color: #e5f4ff;
+    background: #091523;
+    --cyan: #00ffcc;
+    --blue: #38bdf8;
+    --panel: rgba(12, 20, 37, 0.94);
+    --pink: #ff5577;
+    --mission-card-width: clamp(112px, 14vw, 168px);
+    --mission-card-height: 88px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    width: 100%;
+    min-width: 320px;
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 48%, #1a3048 0%, #102238 55%, #091523 100%);
+}
+
+button, input, select { font: inherit; }
+button { color: inherit; }
+
+.game-container {
+    position: relative;
+    width: 100vw;
+    height: 100dvh;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    isolation: isolate;
+    border: 2px solid var(--cyan);
+    border-radius: 0;
+    background: #000;
+    box-shadow: 0 0 24px rgba(0, 255, 204, 0.18), inset 0 0 45px rgba(56, 189, 248, 0.05);
+}
+
+.game-container.is-defeated {
+    border: 0;
+    box-shadow: none;
+}
+
+.game-container.is-victorious {
+    border: 0;
+    box-shadow: none;
+}
+
+.game-pause-screen {
+    position: absolute;
+    z-index: 20;
+    inset: 0;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 12px;
+    background: rgba(3, 10, 20, 0.72);
+    color: #fff;
+    text-align: center;
+}
+
+.game-pause-screen h2 {
+    margin: 0;
+    color: var(--cyan);
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: clamp(1rem, 3vw, 2rem);
+    text-shadow: 0 0 16px rgba(0, 255, 204, 0.55);
+}
+
+.game-pause-screen p {
+    margin: 0;
+    font-size: clamp(0.85rem, 2vw, 1.1rem);
+}
+
+.game-pause-screen[hidden] { display: none; }
+
+.arcade-canvas {
+    position: absolute;
+    z-index: 3;
+    inset: 0 0 145px;
+    width: 100%;
+    height: calc(100% - 145px);
+    touch-action: none;
+}
+
+.arcade-canvas[hidden] { display: none; }
+
+.game-mission-cards {
+    position: absolute;
+    z-index: 8;
+    bottom: 10px;
+    right: 12px;
+    display: grid;
+    width: var(--mission-card-width);
+    gap: 8px;
+    pointer-events: none;
+}
+
+.game-mission-cards[hidden] { display: none; }
+
+.mission-objective-card {
+    display: grid;
+    min-height: var(--mission-card-height);
+    grid-template-rows: 1fr auto 5px;
+    align-content: center;
+    gap: 5px;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 8px;
+    background: rgba(5, 14, 26, 0.82);
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.28), inset 0 0 12px rgba(255, 255, 255, 0.08);
+    color: #fff;
+    text-transform: uppercase;
+    transition: transform 220ms ease, opacity 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.mission-objective-label {
+    align-self: end;
+    color: #e5f4ff;
+    font-size: 0.52rem;
+    font-weight: 700;
+    letter-spacing: 0.035em;
+    line-height: 1.25;
+}
+
+.mission-objective-status {
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-align: right;
+}
+
+.mission-objective-track {
+    height: 5px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 99px;
+    background: rgba(3, 12, 27, 0.9);
+}
+
+.mission-objective-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform: scaleX(var(--mission-progress, 0));
+    transform-origin: left center;
+    background: #fff;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+    transition: transform 180ms ease-out;
+}
+
+.mission-objective-card.is-complete {
+    border-color: #7dff74;
+    box-shadow: 0 0 14px rgba(125, 255, 116, 0.48), inset 0 0 12px rgba(125, 255, 116, 0.12);
+}
+
+.mission-objective-card.is-complete .mission-objective-status,
+.mission-objective-card.is-complete .mission-objective-fill { color: #7dff74; background-color: #7dff74; }
+
+.mission-objective-card.is-failed {
+    border-color: #ff8d8d;
+    box-shadow: 0 0 14px rgba(255, 141, 141, 0.42), inset 0 0 12px rgba(255, 141, 141, 0.12);
+}
+
+.mission-objective-card.is-failed .mission-objective-status,
+.mission-objective-card.is-failed .mission-objective-fill { color: #ff8d8d; background-color: #ff8d8d; }
+
+.game-mission-cards.is-retracted .mission-objective-card {
+    transform: translateX(calc(100% + 24px));
+    opacity: 0;
+}
+
+.character-speech {
+    position: absolute;
+    z-index: 9;
+    top: 100px;
+    left: 50%;
+    width: min(560px, calc(100% - 32px));
+    max-height: 30vh;
+    overflow: auto;
+    margin: 0;
+    padding: 12px 18px;
+    transform: translateX(-50%);
+    border: 1px solid rgba(38, 55, 71, 0.9);
+    border-radius: 12px;
+    background: rgba(255, 248, 223, 0.97);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+    color: #172b3a;
+    font-size: clamp(0.72rem, 1.2vw, 0.9rem);
+    font-weight: 700;
+    line-height: 1.45;
+    text-align: center;
+    pointer-events: none;
+}
+
+.character-speech::after {
+    position: absolute;
+    bottom: -9px;
+    left: 50%;
+    width: 14px;
+    height: 14px;
+    transform: translateX(-50%) rotate(45deg);
+    border-right: 1px solid rgba(38, 55, 71, 0.9);
+    border-bottom: 1px solid rgba(38, 55, 71, 0.9);
+    background: #fff8df;
+    content: "";
+}
+
+.character-speech[hidden] { display: none; }
+
+.game-info-layout {
+    position: absolute;
+    z-index: 8;
+    inset: 0;
+    display: none;
+    pointer-events: none;
+}
+
+.game-container.is-playing .game-info-layout { display: block; }
+
+.game-playing-cards {
+    position: absolute;
+    right: 16px;
+    bottom: 10px;
+    left: 16px;
+    display: grid;
+    width: auto;
+    grid-template-areas: "radar aircraft shield laser energy";
+    grid-template-columns: repeat(2, 90px) repeat(3, 70px);
+    grid-template-rows: 110px;
+    align-items: end;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.game-score-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0;
+    border: 0;
+    background: rgba(5, 14, 26, 0.62);
+    box-shadow: none;
+    color: #fff;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+}
+
+.game-score-total {
+    display: flex;
+    min-width: 16ch;
+    align-items: baseline;
+    justify-content: center;
+    gap: 1ch;
+    color: #fff;
+    font-size: clamp(0.9rem, 3vw, 2rem);
+    white-space: nowrap;
+}
+
+.game-score-total output {
+    color: #fff;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-weight: 800;
+}
+
+.game-playing-cards .credential-radar-card {
+    width: 90px;
+    height: 110px;
+    gap: 2px;
+    padding: 6px 3px;
+}
+.game-playing-cards .credential-radar-scope { width: 68px; height: 76px; }
+.game-playing-cards .credential-aircraft-card {
+    width: 90px;
+    height: 110px;
+    gap: 2px;
+    padding: 6px 3px;
+}
+.game-playing-cards .credential-aircraft-card svg { width: 60px; height: 76px; }
+.game-playing-cards .credential-gauge-label {
+    color: #fff;
+    font-size: 0.52rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+.game-playing-cards .credential-gauge {
+    width: 70px;
+    height: 110px;
+    gap: 6px;
+    padding: 8px 4px;
+}
+.game-playing-cards .credential-shield-icon { width: 44px; height: 64px; }
+.game-playing-cards .credential-gauge--laser {
+    width: 70px;
+    gap: 5px;
+    align-content: center;
+}
+.game-playing-cards .credential-laser-icon { width: 66px; height: 76px; }
+.game-playing-cards .game-laser-status {
+    color: #aab8c5;
+    font-size: 0.38rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+.game-playing-cards .credential-gauge--laser.is-ready {
+    border-color: #67f8ff;
+    box-shadow: 0 0 16px rgba(0, 255, 255, 0.52), inset 0 0 12px rgba(0, 255, 255, 0.16);
+}
+.game-playing-cards .credential-gauge--laser.is-ready .credential-laser-icon {
+    filter: drop-shadow(0 0 7px #36f8ff);
+}
+.game-playing-cards .credential-gauge--laser.is-ready .game-laser-status {
+    color: #67f8ff;
+}
+.game-playing-cards .credential-gauge-track {
+    width: 24px;
+    height: 70px;
+}
+.game-playing-cards .game-aircraft-impact-count {
+    font-size: 0.42rem;
+    letter-spacing: 0.02em;
+}
+
+.game-playing-cards .credential-radar-card,
+.game-playing-cards .credential-aircraft-card,
+.game-playing-cards .credential-gauge {
+    border-color: #fff;
+    color: #fff;
+    box-shadow: none;
+}
+
+.game-playing-cards .credential-gauge-label { color: #fff; }
+.game-playing-cards .credential-radar-grid { stroke: rgba(255, 255, 255, 0.55); }
+.game-playing-cards .credential-radar-crosshair { stroke: rgba(255, 255, 255, 0.3); }
+.game-playing-cards .radar-player-marker,
+.game-playing-cards .radar-enemy-marker { filter: none; }
+.game-playing-cards .credential-aircraft-card .dashboard-aircraft-shape {
+    fill: rgba(255, 255, 255, 0.08);
+    stroke: #fff;
+    filter: none;
+}
+.game-playing-cards .credential-aircraft-card .dashboard-aircraft-detail { stroke: #fff; }
+.game-playing-cards .credential-gauge-track {
+    border-color: #fff;
+    box-shadow: none;
+}
+.game-playing-cards .credential-gauge-fill {
+    background: #fff;
+    box-shadow: none;
+}
+.game-playing-cards .credential-gauge--energy .energy-bolt-fill { fill: #ef4444; }
+.game-playing-cards .credential-shield-outline { stroke: #fff; }
+.game-playing-cards .credential-shield-fill {
+    fill: #fff;
+    filter: none;
+}
+
+.credential-radar-card {
+    display: grid;
+    width: 116px;
+    height: 140px;
+    grid-area: radar;
+    align-content: center;
+    justify-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    border: 1px solid rgba(125, 232, 245, 0.9);
+    border-radius: 10px;
+    background: linear-gradient(160deg, rgba(9, 29, 49, 0.94), rgba(9, 29, 49, 0.72));
+    box-shadow: 0 0 18px rgba(0, 255, 204, 0.28), inset 0 0 15px rgba(56, 189, 248, 0.14);
+    color: #fff;
+    font-size: 0.54rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: center;
+}
+
+.credential-radar-scope {
+    width: 88px;
+    height: 94px;
+    overflow: visible;
+}
+
+.credential-radar-grid {
+    fill: rgba(3, 21, 33, 0.82);
+    stroke: rgba(125, 232, 245, 0.45);
+    stroke-width: 1;
+}
+
+.credential-radar-crosshair {
+    stroke: rgba(125, 232, 245, 0.24);
+    stroke-width: 0.7;
+}
+
+.radar-player-marker {
+    fill: #fff;
+    stroke: #fff;
+    stroke-width: 1;
+    filter: drop-shadow(0 0 3px #fff);
+}
+
+.radar-enemy-marker {
+    fill: #f04438;
+    stroke: #ff887d;
+    stroke-width: 0.8;
+    filter: drop-shadow(0 0 2px #f04438);
+}
+
+.dashboard-aircraft-shape {
+    fill: rgba(0, 255, 128, 0.08);
+    stroke: #43ff9a;
+    stroke-linejoin: round;
+    stroke-width: 1.6;
+}
+
+.dashboard-aircraft-detail {
+    fill: none;
+    stroke: rgba(67, 255, 154, 0.7);
+    stroke-width: 1;
+}
+
+.aircraft-damage-marker {
+    fill: #ff554d;
+    stroke: #fff3a6;
+    stroke-width: 1.4;
+    filter: drop-shadow(0 0 4px #ff554d);
+}
+
+.dorothy-sprite, .christina-sprite, .fei-fei-li-sprite {
+    display: none;
+}
+
+.title-screen, .end-screen {
+    position: absolute;
+    z-index: 10;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(5, 9, 17, 0.82);
+    text-align: center;
+}
+
+.opening-screen {
+    position: fixed;
+    z-index: 40;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    padding: 24px;
+    background: #000;
+}
+
+.opening-screen::before {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    background: linear-gradient(rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0.24)), url("../img/skyrescue.png") center / cover no-repeat;
+    content: "";
+}
+
+.opening-start-card {
+    position: absolute;
+    z-index: 1;
+    right: 18px;
+    bottom: 18px;
+    width: min(440px, calc(100vw - 36px));
+    padding: 16px 18px;
+    border: 1px solid rgba(125, 232, 245, 0.9);
+    border-radius: 8px;
+    background: linear-gradient(160deg, rgba(9, 29, 49, 0.96), rgba(9, 29, 49, 0.86));
+    box-shadow: 0 0 18px rgba(0, 255, 204, 0.28), inset 0 0 15px rgba(56, 189, 248, 0.14);
+    text-align: left;
+}
+
+.opening-start-card p {
+    margin: 0 0 10px;
+    font-size: 0.82rem;
+}
+
+.opening-start-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 150px;
+    padding: 9px 16px;
+    border: 1px solid rgba(125, 232, 245, 0.9);
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(8, 92, 119, 0.95), rgba(0, 153, 143, 0.95));
+    box-shadow: 0 0 12px rgba(0, 255, 204, 0.2);
+    color: #e5ffff;
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.opening-start-button:hover {
+    background: linear-gradient(135deg, #0b7898, #00a99b);
+    box-shadow: 0 0 16px rgba(0, 255, 204, 0.45);
+}
+
+.opening-start-button:focus-visible {
+    outline: 2px solid #e8ffff;
+    outline-offset: 3px;
+}
+
+.rescue-transition-screen::before {
+    background: none;
+}
+
+.rescue-transition-background {
+    position: fixed;
+    z-index: 0;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    object-fit: cover;
+    object-position: center center;
+    filter: brightness(0.76);
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+    pointer-events: none;
+}
+
+@keyframes credential-card-enter {
+    from {
+        transform: translate3d(100%, 0, 0);
+    }
+    to {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.end-screen.loss-background {
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 18px;
+    background: linear-gradient(rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0.24)), url("../img/skyrescue-perdeu.png") center / cover no-repeat;
+    text-align: left;
+}
+
+.end-screen.victory-background {
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 18px;
+    background: linear-gradient(rgba(0, 0, 0, 0.24), rgba(0, 0, 0, 0.24)), url("../img/skyrescue-venceu.png") center / cover no-repeat;
+    text-align: left;
+}
+
+.end-screen.mission-end-background .end-card {
+    display: grid;
+    width: min(900px, 100%);
+    max-height: calc(100dvh - 36px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 20px;
+    overflow-y: auto;
+    padding: 18px 22px;
+    border: 1px solid rgba(125, 232, 245, 0.9);
+    border-radius: 8px;
+    background: linear-gradient(160deg, rgba(9, 29, 49, 0.96), rgba(9, 29, 49, 0.86));
+    box-shadow: 0 0 18px rgba(0, 255, 204, 0.28), inset 0 0 15px rgba(56, 189, 248, 0.14);
+}
+
+.end-screen.mission-end-background .end-card > h2,
+.end-screen.mission-end-background #endMessage,
+.end-screen.mission-end-background #endActionError,
+.end-screen.mission-end-background .end-card-actions {
+    grid-column: 1 / -1;
+}
+
+.mission-end-report,
+.mission-leaderboard {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid rgba(125, 232, 245, 0.3);
+    border-radius: 6px;
+    background: rgba(3, 15, 28, 0.48);
+}
+
+.mission-end-report h3,
+.mission-leaderboard h3 {
+    margin: 0 0 9px;
+    color: #7de8f5;
+    font-size: 0.74rem;
+    letter-spacing: 0.08em;
+}
+
+.mission-end-report dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    margin: 0;
+}
+
+.mission-end-report dl > div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding: 7px;
+    border-radius: 4px;
+    background: rgba(125, 232, 245, 0.07);
+}
+
+.mission-end-report dt {
+    color: #a9c2d5;
+    font-size: 0.63rem;
+}
+
+.mission-end-report dd {
+    margin: 0;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.mission-leaderboard ol {
+    display: grid;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: none;
+}
+
+.mission-leaderboard li {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 5px 7px;
+    border-radius: 4px;
+    background: rgba(125, 232, 245, 0.07);
+    color: #dcecf4;
+    font-size: 0.68rem;
+}
+
+.mission-leaderboard li::before {
+    flex: 0 0 24px;
+    color: #7de8f5;
+    content: attr(data-rank) ".";
+    font-weight: 700;
+}
+
+.mission-leaderboard li span {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mission-leaderboard li strong {
+    color: #fff;
+    white-space: nowrap;
+}
+
+.mission-leaderboard li.is-current-match {
+    outline: 1px solid #7de8f5;
+    background: rgba(0, 255, 204, 0.16);
+}
+
+.end-screen.mission-end-background .mission-leaderboard #leaderboardStatus,
+.end-screen.mission-end-background .mission-leaderboard .leaderboard-player-rank {
+    margin: 6px 0;
+    color: #b7d1df;
+    font-size: 0.68rem;
+}
+
+.end-screen.mission-end-background .end-card h2 {
+    margin-bottom: 8px;
+    color: #7de8f5;
+    font-size: clamp(1rem, 2vw, 1.4rem);
+}
+
+.end-screen.mission-end-background .end-card p {
+    margin: 8px 0;
+    font-size: 0.82rem;
+}
+
+.end-screen.mission-end-background .end-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+@media (max-width: 680px) {
+    .end-screen.mission-end-background {
+        align-items: center;
+        justify-content: center;
+        overflow-y: auto;
+        padding: 10px;
+    }
+
+    .end-screen.mission-end-background .end-card {
+        max-height: calc(100dvh - 20px);
+        grid-template-columns: minmax(0, 1fr);
+        gap: 9px;
+        padding: 14px;
+    }
+
+    .end-screen.mission-end-background .end-card > h2,
+    .end-screen.mission-end-background #endMessage,
+    .end-screen.mission-end-background #endActionError,
+    .end-screen.mission-end-background .end-card-actions {
+        grid-column: 1;
+    }
+
+    .mission-end-report,
+    .mission-leaderboard {
+        padding: 9px;
+    }
+
+    .mission-end-report dl { gap: 5px; }
+    .mission-end-report dl > div { padding: 6px; }
+    .mission-end-report dt { font-size: 0.57rem; }
+    .mission-end-report dd { font-size: 0.72rem; }
+}
+
+.end-screen.mission-end-background .end-action-progress {
+    position: absolute;
+    z-index: 1;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 12px;
+    margin: 0;
+    border-radius: 0;
+}
+
+.end-screen.mission-end-background .end-card-actions .btn-restart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex: 1 1 150px;
+    margin-top: 0;
+    padding: 9px 12px;
+    border: 1px solid rgba(125, 232, 245, 0.9);
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(8, 92, 119, 0.95), rgba(0, 153, 143, 0.95));
+    box-shadow: 0 0 12px rgba(0, 255, 204, 0.2);
+    color: #e5ffff;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+}
+
+.end-screen.mission-end-background .btn-restart::before {
+    content: "↻";
+    font-size: 1.1rem;
+}
+
+.end-screen.mission-end-background #newPlayerButton {
+    background: linear-gradient(135deg, rgba(9, 54, 87, 0.95), rgba(16, 104, 132, 0.95));
+}
+
+.end-screen.mission-end-background #newPlayerButton::before {
+    content: "+";
+    font-size: 1.1rem;
+}
+
+.end-screen.mission-end-background .end-card-actions .btn-restart:hover {
+    background: linear-gradient(135deg, #0b7898, #00a99b);
+    box-shadow: 0 0 16px rgba(0, 255, 204, 0.45);
+}
+
+.end-screen.mission-end-background .end-card-actions .btn-restart:focus-visible {
+    outline: 2px solid #e8ffff;
+    outline-offset: 3px;
+}
+
+.credential-aircraft-card {
+    display: grid;
+    width: 116px;
+    height: 140px;
+    grid-area: aircraft;
+    align-content: center;
+    justify-items: center;
+    gap: 3px;
+    padding: 8px 4px;
+    border: 1px solid rgba(125, 232, 245, 0.9);
+    border-radius: 10px;
+    background: linear-gradient(160deg, rgba(9, 29, 49, 0.94), rgba(9, 29, 49, 0.72));
+    box-shadow: 0 0 18px rgba(0, 255, 204, 0.28), inset 0 0 15px rgba(56, 189, 248, 0.14);
+    color: #fff;
+    font-size: 0.54rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-align: center;
+}
+
+.credential-aircraft-card svg {
+    width: 72px;
+    height: 94px;
+    overflow: visible;
+}
+
+.credential-aircraft-card .dashboard-aircraft-shape {
+    fill: rgba(125, 232, 245, 0.08);
+    stroke: #fff;
+}
+
+.credential-aircraft-card .dashboard-aircraft-detail {
+    stroke: rgba(255, 255, 255, 0.75);
+}
+
+.credential-aircraft-card.is-ready .dashboard-aircraft-shape {
+    fill: rgba(255, 255, 255, 0.18);
+    stroke: #fff;
+    filter: drop-shadow(0 0 8px #fff);
+}
+
+.credential-aircraft-card.is-ready .dashboard-aircraft-detail {
+    stroke: #fff;
+    filter: drop-shadow(0 0 5px #fff);
+}
+
+.credential-aircraft-card.is-energy-warning {
+    --aircraft-warning-color: #ffe600;
+    --aircraft-warning-fill: rgba(255, 230, 0, 0.42);
+}
+
+.credential-aircraft-card.is-energy-warning--orange {
+    --aircraft-warning-color: #ff8c00;
+    --aircraft-warning-fill: rgba(255, 140, 0, 0.42);
+}
+
+.credential-aircraft-card.is-energy-warning--red {
+    --aircraft-warning-color: #ff3030;
+    --aircraft-warning-fill: rgba(255, 48, 48, 0.42);
+}
+
+.credential-aircraft-card.is-energy-warning .dashboard-aircraft-shape {
+    fill: var(--aircraft-warning-fill);
+    stroke: var(--aircraft-warning-color);
+    filter: drop-shadow(0 0 8px var(--aircraft-warning-color));
+    animation: aircraft-energy-warning-blink 300ms steps(2, end) infinite;
+}
+
+.credential-aircraft-card.is-energy-warning .dashboard-aircraft-detail {
+    stroke: var(--aircraft-warning-color);
+    animation: aircraft-energy-warning-blink 300ms steps(2, end) infinite;
+}
+
+@keyframes aircraft-energy-warning-blink {
+    0%, 49% { opacity: 0.12; }
+    50%, 100% { opacity: 0.55; }
+}
+
+.credential-aircraft-ready-status {
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-shadow: none;
+}
+
+.game-aircraft-impact-count {
+    color: #fff;
+    font-size: 0.48rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.aircraft-shield-meter {
+    width: 100%;
+    display: grid;
+    gap: 4px;
+    margin-top: 2px;
+    padding: 0 8px;
+}
+
+.aircraft-shield-meter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    color: #7de8f5;
+    font-size: 0.46rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.aircraft-shield-meter-value {
+    color: #dffcff;
+    font-size: 0.42rem;
+    letter-spacing: 0.06em;
+}
+
+.aircraft-shield-meter-track {
+    position: relative;
+    width: 100%;
+    height: 7px;
+    overflow: hidden;
+    border: 1px solid rgba(125, 232, 245, 0.7);
+    border-radius: 999px;
+    background: rgba(3, 12, 27, 0.8);
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.45);
+}
+
+.aircraft-shield-meter-fill {
+    --shield-progress: 1;
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 100%;
+    border-radius: inherit;
+    transform: scaleX(var(--shield-progress, 0));
+    transform-origin: left center;
+    background: linear-gradient(90deg, #00ffcc, #8af7ff 60%, #e8ffff);
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.7);
+    transition: transform 140ms ease-out;
+}
+
+.credential-gauge--shield { grid-area: shield; }
+.credential-gauge--laser { grid-area: laser; }
+.game-laser-status {
+    color: #aab8c5;
+    font-size: 0.38rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+.credential-gauge--energy { grid-area: energy; }
+
+.credential-gauge {
+    position: relative;
+    display: grid;
+    width: 92px;
+    height: 140px;
+    align-content: start;
+    justify-items: center;
+    gap: 9px;
+    padding: 11px 8px;
+    border: 1px solid rgba(125, 232, 245, 0.9);
+    border-radius: 10px;
+    background: linear-gradient(160deg, rgba(9, 29, 49, 0.94), rgba(9, 29, 49, 0.72));
+    box-shadow: 0 0 18px rgba(0, 255, 204, 0.28), inset 0 0 15px rgba(56, 189, 248, 0.14);
+    color: #e5f4ff;
+    text-align: center;
+}
+
+.credential-gauge-label {
+    color: #7de8f5;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+}
+
+.credential-gauge-track {
+    position: relative;
+    width: 30px;
+    height: 94px;
+    overflow: hidden;
+    border: 1px solid rgba(125, 232, 245, 0.55);
+    border-radius: 5px;
+    background: repeating-linear-gradient(
+        to top,
+        rgba(125, 232, 245, 0.13) 0 1px,
+        transparent 1px 18px
+    ), rgba(3, 12, 27, 0.8);
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.55);
+}
+
+.credential-gauge-fill {
+    --gauge-progress: 0;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 100%;
+    transform: scaleY(var(--gauge-progress, 0));
+    transform-origin: bottom;
+    background: linear-gradient(to top, #00a88d, #00ffcc 70%, #b4fff1);
+    box-shadow: 0 0 12px rgba(0, 255, 204, 0.7);
+    transition: transform 80ms linear;
+}
+
+.energy-bolt-icon {
+    width: 56px;
+    height: 84px;
+    overflow: visible;
+}
+
+.energy-bolt-outline {
+    fill: rgba(3, 12, 27, 0.8);
+    stroke: rgba(255, 255, 255, 0.78);
+    stroke-width: 5;
+    stroke-linejoin: round;
+}
+
+.energy-bolt-fill {
+    fill: #ef4444;
+    filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.7));
+    transition: y 140ms ease-out, height 140ms ease-out;
+}
+
+.credential-shield-icon {
+    width: 52px;
+    height: 78px;
+    overflow: visible;
+    filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.55));
+}
+
+.credential-shield-shadow {
+    fill: #07162f;
+    stroke: #020817;
+    stroke-width: 3;
+    stroke-linejoin: round;
+}
+
+.credential-shield-outline {
+    fill: #0c2d64;
+    stroke: url(#gameShieldRim);
+    stroke-width: 6;
+    stroke-linejoin: round;
+}
+
+.credential-shield-fill {
+    fill: url(#gameShieldGradient);
+    transition: y 180ms ease-out, height 180ms ease-out;
+}
+
+.credential-gauge--shield.is-ready .credential-shield-outline {
+    stroke: #fff;
+}
+
+.credential-gauge--shield.is-ready .credential-shield-fill {
+    fill: #fff;
+    filter: none;
+}
+
+.opening-screen::after {
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(transparent 0 3px, rgba(0, 0, 0, 0.28) 4px);
+    content: "";
+}
+
+.opening-progress {
+    position: absolute;
+    z-index: 1;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 12px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.opening-progress-fill {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: #ffea00;
+    transform: scaleX(0);
+    transform-origin: left center;
+    animation: opening-progress-fill 4s linear forwards;
+}
+
+.credential-progress-fill { animation: none; }
+.credential-confirmation-progress .credential-progress-fill {
+    animation: opening-progress-fill 1.5s linear forwards;
+}
+
+@keyframes opening-progress-fill {
+    0% { transform: scaleX(0); }
+    100% { transform: scaleX(1); }
+}
+
+.title-card, .end-card {
+    width: min(680px, 100%);
+    padding: clamp(24px, 5vw, 52px);
+    border: 2px solid var(--cyan);
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.94);
+    box-shadow: 0 0 24px rgba(0, 255, 204, 0.19);
+}
+
+.title-card h1 {
+    margin: 0 0 12px;
+    color: #fff;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    letter-spacing: 0.06em;
+    text-shadow: 0 0 11px rgba(0, 255, 204, 0.55);
+}
+
+.title-card p, .end-card p { line-height: 1.6; }
+.subtitle { margin: 0 0 24px; color: var(--pink); }
+.registration-gate-message { color: #d9e6fa; }
+
+.btn-start, .survey-submit, .btn-restart {
+    padding: 12px 22px;
+    border: 2px solid var(--cyan);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--cyan);
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+}
+
+.btn-start:hover, .btn-restart:hover, .survey-submit:hover:not(:disabled) {
+    background: var(--cyan);
+    color: #071018;
+    box-shadow: 0 0 16px rgba(0, 255, 204, 0.55);
+}
+
+.credits-footer {
+    margin-top: 24px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    color: #94a3b8;
+    font-size: 0.82rem;
+}
+
+.credits-footer strong { color: #e2e8f0; }
+.end-card h2 { margin-top: 0; color: var(--pink); }
+.end-card.won h2 { color: var(--cyan); }
+.end-card .btn-restart { margin-top: 10px; }
+[hidden] { display: none !important; }
+
+.survey-overlay {
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 16px 28px 50px clamp(20px, 5vw, 64px);
+    background: transparent;
+}
+
+.rescue-transition-screen .survey-overlay { pointer-events: none; }
+
+.survey-panel {
+    width: min(480px, 40vw);
+    min-height: min(410px, calc(100dvh - 180px));
+    max-height: calc(100vh - 250px);
+    overflow-y: auto;
+    padding: 11px 12px 5px;
+    border: 1px solid #7de8f5;
+    border-radius: 12px;
+    background: linear-gradient(160deg, rgba(9, 29, 49, 0.94), rgba(9, 29, 49, 0.72));
+    box-shadow: inset 0 0 20px rgba(0, 255, 128, 0.08), 0 0 12px rgba(0, 255, 128, 0.12);
+    color: #7de8f5;
+    font-family: "Courier New", monospace;
+    font-size: 0.8rem;
+    pointer-events: auto;
+}
+
+.survey-panel h2 {
+    margin: 0 0 8px;
+    color: #7de8f5;
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    text-align: center;
+}
+.rescue-transition-screen .survey-panel,
+.rescue-transition-screen .survey-panel h2 {
+    color: #fff;
+    font-weight: 700;
+}
+.rescue-transition-screen .survey-panel.credential-card-entering {
+    animation: credential-card-enter 2500ms linear both;
+    will-change: transform;
+}
+@keyframes credential-card-exit {
+    to { transform: translate3d(100%, 0, 0); }
+}
+.rescue-transition-screen .survey-panel.credential-card-exiting {
+    animation: credential-card-exit 2500ms linear forwards;
+    will-change: transform;
+}
+.rescue-transition-screen .survey-panel.credential-card-confirmed {
+    border-color: #fff;
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.18), 0 0 22px rgba(255, 255, 255, 0.75);
+    color: #fff;
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+}
+.rescue-transition-screen .credential-card-confirmed h2 {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
+}
+.rescue-transition-screen .credential-card-confirmed .survey-field input,
+.rescue-transition-screen .credential-card-confirmed .survey-field select,
+.rescue-transition-screen .credential-card-confirmed .survey-fieldset {
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.45);
+}
+.rescue-transition-screen .credential-card-confirmed .survey-field input,
+.rescue-transition-screen .credential-card-confirmed .survey-field select {
+    color: #fff;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+}
+.rescue-transition-screen .credential-card-confirmed #surveySubmit {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.75);
+    color: #fff;
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+.survey-panel > p { line-height: 1.5; }
+.survey-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 8px;
+}
+.survey-field { display: grid; gap: 3px; margin: 4px 0; }
+.survey-field input, .survey-field select {
+    width: 100%;
+    padding: 5px 6px;
+    border: 1px solid rgba(0, 255, 128, 0.45);
+    border-radius: 5px;
+    background: rgba(9, 29, 49, 0.94);
+    color: #7de8f5;
+    font: inherit;
+}
+.survey-field input[name="name"] { color: #fff; }
+.survey-fieldset {
+    min-width: 0;
+    margin: 4px 0;
+    padding: 4px 6px;
+    border: 1px solid rgba(0, 255, 128, 0.3);
+    border-radius: 6px;
+}
+.student-status-fieldset { grid-column: 1 / -1; }
+.survey-fieldset legend { padding: 0 3px; }
+.survey-radio-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 6px;
+}
+#surveyForm .survey-fieldset--age .survey-radio-options {
+    flex-direction: column;
+    align-items: flex-start;
+}
+.survey-radio-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+}
+.survey-radio-option input { accent-color: #fff; }
+.survey-radio-option:has(input:checked) { color: #fff; }
+.survey-field select:valid, .survey-field select option:checked { color: #fff; }
+.survey-fieldset:disabled { opacity: 0.45; }
+.survey-field:has(select:disabled) { opacity: 0.45; }
+.survey-field input:focus, .survey-field select:focus {
+    border-color: #43ff9a;
+    outline: 2px solid #43ff9a;
+    outline-offset: 1px;
+}
+.survey-submit { display: block; width: fit-content; margin: 3px auto 0; padding: 6px 10px; font-size: 0.8rem; }
+#surveySubmit {
+    border-color: #f97316;
+    background: #f97316;
+    color: #000;
+}
+#surveySubmit:hover:not(:disabled) {
+    background: #ea580c;
+    border-color: #ea580c;
+    color: #000;
+    box-shadow: 0 0 16px rgba(249, 115, 22, 0.6);
+}
+.survey-submit:disabled { cursor: wait; opacity: 0.65; }
+.survey-error { min-height: 0; margin: 2px 0 0; color: #ff8d8d; }
+@media (max-width: 580px) {
+    .survey-fields { grid-template-columns: minmax(0, 1fr); }
+    .survey-overlay { align-items: center; justify-content: center; padding: 12px; }
+    .survey-panel { width: min(520px, 100%); max-height: calc(100vh - 24px); padding: 12px 12px 5px; }
+}
+
+@media (max-width: 980px) {
+    .rescue-transition-screen .survey-overlay {
+        padding-top: 164px;
+    }
+    .rescue-transition-screen .survey-panel {
+        max-height: calc(100dvh - 180px);
+    }
+}
+
+@media (min-width: 981px) and (max-width: 1100px) {
+    .credential-radar-card {
+        width: 88px;
+        height: 120px;
+    }
+    .credential-radar-scope { width: 68px; height: 76px; }
+    .credential-aircraft-card {
+        width: 88px;
+        height: 120px;
+    }
+    .credential-gauge {
+        width: 64px;
+        height: 120px;
+        gap: 7px;
+        padding: 9px 5px;
+    }
+    .credential-gauge-track { height: 78px; }
+    .credential-gauge-label { font-size: 0.46rem; letter-spacing: 0; }
+}
+
+@media (min-width: 681px) and (max-width: 980px) {
+    .game-playing-cards {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-areas:
+            "radar aircraft shield laser energy";
+        grid-template-rows: 110px;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 680px) {
+    .character-speech {
+        top: 82px;
+        padding: 9px 12px;
+    }
+
+    .game-playing-cards {
+        right: 8px;
+        bottom: 8px;
+        left: 8px;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-areas:
+            "radar aircraft shield laser energy";
+        grid-template-rows: 98px;
+        gap: 4px;
+    }
+    .game-playing-cards .credential-radar-card {
+        width: 100%;
+        min-width: 0;
+        height: 98px;
+        gap: 2px;
+        padding: 5px 2px;
+    }
+    .game-playing-cards .credential-radar-scope { width: 38px; height: 58px; }
+    .game-playing-cards .credential-aircraft-card {
+        width: 100%;
+        min-width: 0;
+        height: 98px;
+    }
+    .game-playing-cards .credential-aircraft-card svg { width: 38px; height: 52px; }
+    .game-playing-cards .game-aircraft-impact-count { font-size: 0.3rem; letter-spacing: 0; }
+    .game-playing-cards .credential-gauge {
+        width: 100%;
+        min-width: 0;
+        height: 98px;
+        gap: 5px;
+        padding: 7px 3px;
+    }
+    .game-playing-cards .credential-gauge--laser { gap: 3px; }
+    .game-playing-cards .credential-gauge--laser { padding-right: 1px; padding-left: 1px; }
+    .game-playing-cards .credential-laser-icon { width: 42px; height: 58px; }
+    .game-playing-cards .game-laser-status { font-size: 0.26rem; }
+    .game-playing-cards .credential-gauge-label { font-size: 0.34rem; letter-spacing: 0; }
+    .game-playing-cards .credential-gauge-track { width: 21px; height: 60px; }
+    .game-playing-cards .credential-shield-icon { width: 30px; height: 46px; }
+    .game-playing-cards .energy-bolt-icon { width: 36px; height: 54px; }
+    .credential-radar-card {
+        width: clamp(50px, 10vw, 72px);
+        height: 120px;
+        padding: 7px 3px;
+        gap: 3px;
+    }
+    .credential-radar-scope { width: 44px; height: 76px; }
+    .credential-aircraft-card {
+        width: clamp(50px, 10vw, 72px);
+        height: 120px;
+    }
+    .credential-aircraft-card svg { width: 40px; height: 68px; }
+    .credential-gauge {
+        width: min(60px, calc((100vw - 68px) / 3));
+        height: 120px;
+        gap: 7px;
+        padding: 9px 5px;
+    }
+    .credential-gauge-label,
+    .credential-aircraft-ready-status { font-size: 0.42rem; letter-spacing: 0.02em; }
+    .credential-gauge-track { width: 25px; height: 78px; }
+    .credential-shield-icon { width: 42px; height: 64px; }
+    .rescue-transition-screen .survey-overlay {
+        align-items: flex-end;
+        padding: 144px 12px 12px;
+    }
+    .rescue-transition-screen .survey-panel {
+        max-height: calc(100dvh - 156px);
+    }
+    .game-container {
+        background: #000;
+    }
+    .dorothy-sprite {
+        left: 2%;
+        width: clamp(210px, 58vw, 280px);
+        max-height: 55%;
+    }
+    .arcade-canvas {
+        inset: 0 0 225px;
+        height: calc(100% - 225px);
+    }
+    .title-screen, .end-screen { inset: 0; }
+    .title-card, .end-card { padding: 24px 18px; }
+    .credits-footer { font-size: 0.72rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    .credential-aircraft-card.is-energy-warning .dashboard-aircraft-shape,
+    .credential-aircraft-card.is-energy-warning .dashboard-aircraft-detail {
+        animation: none !important;
+        opacity: 0.55;
+    }
+}
+
+.game-container.is-playing .arcade-canvas {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.game-container.is-playing .game-score-card {
+    z-index: 1;
+    height: 48px;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 0;
+    background: rgba(5, 14, 26, 0.82);
+}
+
+.game-container.is-playing .game-score-total {
+    min-width: 0;
+    justify-content: center;
+    font-size: clamp(0.7rem, 1.6vw, 1.4rem);
+}
+
+.game-container.is-playing .game-player-status,
+.game-container.is-playing .game-ranking-status {
+    position: absolute;
+    top: 50%;
+    max-width: calc(50% - 95px);
+    overflow: hidden;
+    color: #fff;
+    font-family: 'Orbitron', 'Courier New', monospace;
+    font-size: clamp(0.48rem, 0.8vw, 0.68rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-overflow: ellipsis;
+    transform: translateY(-50%);
+    white-space: nowrap;
+}
+
+.game-container.is-playing .game-player-status {
+    left: 16px;
+    text-align: left;
+}
+
+.game-container.is-playing .game-ranking-status {
+    right: 16px;
+    text-align: right;
+}
+
+.game-container.is-playing .game-player-status strong,
+.game-container.is-playing .game-ranking-status strong {
+    color: #7de8f5;
+}
+
+.game-container.is-playing .game-score-label {
+    font-size: 1em;
+}
+
+.game-container.is-playing .game-hud-indicators {
+    z-index: 2;
+    top: 0;
+    right: 8px;
+    bottom: auto;
+    left: 8px;
+    display: grid;
+    width: auto;
+    height: 88px;
+    align-items: center;
+    justify-content: center;
+    grid-template-columns:
+        auto auto auto
+        minmax(clamp(3.2rem, 14vw, 10rem), auto)
+        auto auto auto;
+    gap: clamp(3px, 0.8vw, 10px);
+    pointer-events: none;
+}
+
+.game-container.is-playing .game-hud-indicators::before {
+    content: "";
+    grid-area: radar;
+    visibility: hidden;
+}
+
+.game-container.is-playing .game-hud-indicators::after {
+    content: "";
+    grid-area: aircraft;
+    visibility: hidden;
+}
+
+.game-hud-indicators .credential-radar-card,
+.game-hud-indicators .credential-aircraft-card,
+.game-hud-indicators .credential-gauge {
+    width: auto;
+    min-width: 0;
+    height: 72px;
+    align-content: center;
+    gap: 2px;
+    padding: 3px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.game-hud-indicators .credential-radar-card {
+    position: fixed;
+    bottom: 12px;
+    left: 12px;
+    width: var(--mission-card-width);
+    height: var(--mission-card-height);
+    justify-items: center;
+    gap: 2px;
+    padding: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 8px;
+    background: rgba(5, 14, 26, 0.82);
+    transition: transform 220ms ease, opacity 180ms ease;
+}
+
+.game-hud-indicators .credential-radar-scope {
+    width: 56px;
+    height: 56px;
+}
+
+.game-hud-indicators .credential-aircraft-card {
+    position: fixed;
+    bottom: 108px;
+    left: 12px;
+    width: var(--mission-card-width);
+    height: var(--mission-card-height);
+    gap: 2px;
+    padding: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 8px;
+    background: rgba(5, 14, 26, 0.82);
+    transition: transform 220ms ease, opacity 180ms ease;
+}
+
+.game-hud-indicators .game-energy-card,
+.game-hud-indicators .game-shield-card,
+.game-hud-indicators .game-laser-card {
+    position: fixed;
+    left: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--mission-card-width);
+    height: var(--mission-card-height);
+    gap: 4px;
+    padding: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 8px;
+    background: rgba(5, 14, 26, 0.82);
+    transition: transform 220ms ease, opacity 180ms ease;
+}
+
+.game-hud-indicators .game-energy-card {
+    bottom: 396px;
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.42), inset 0 0 12px rgba(255, 255, 255, 0.12);
+}
+
+.game-hud-indicators .game-shield-card {
+    bottom: 300px;
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.42), inset 0 0 12px rgba(255, 255, 255, 0.12);
+}
+
+.game-hud-indicators .game-laser-card {
+    bottom: 204px;
+}
+
+
+.game-hud-indicators .game-laser-card.is-ready {
+    border-color: #fff;
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.68), inset 0 0 14px rgba(255, 255, 255, 0.18);
+}
+
+.game-hud-indicators .game-laser-card.is-unlocking {
+    animation: laser-unlock-blink 500ms step-end 10 forwards;
+}
+
+@keyframes laser-unlock-blink {
+    0%, 49% {
+        border-color: rgba(255, 255, 255, 0.28);
+        box-shadow: none;
+    }
+
+    50%, 100% {
+        border-color: #fff;
+        box-shadow: 0 0 16px rgba(255, 255, 255, 0.72), inset 0 0 14px rgba(255, 255, 255, 0.2);
+    }
+}
+
+.game-hud-indicators .game-laser-card.is-ready .game-laser-status {
+    color: #fff;
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.85);
+}
+
+.game-hud-indicators .game-laser-card.is-ready .credential-laser-icon {
+    filter: drop-shadow(0 0 7px rgba(255, 255, 255, 0.9));
+}
+
+.game-hud-indicators .game-shield-card .credential-gauge {
+    width: auto;
+    min-width: 0;
+    height: auto;
+    gap: 6px;
+    padding: 2px 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.game-hud-indicators .game-shield-card .credential-gauge-label {
+    font-size: 0.44rem;
+}
+
+.game-hud-indicators .game-shield-card .credential-shield-icon {
+    display: block;
+    width: 46px;
+    height: 52px;
+    justify-self: center;
+    margin-inline: auto;
+}
+
+.game-hud-indicators .game-energy-card .credential-gauge {
+    width: auto;
+    min-width: 0;
+    height: auto;
+    gap: 6px;
+    padding: 2px 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.game-hud-indicators .game-energy-card .credential-gauge-label {
+    font-size: 0.44rem;
+}
+
+.game-hud-indicators .game-energy-card .energy-bolt-icon {
+    display: block;
+    width: 46px;
+    height: 52px;
+    justify-self: center;
+    margin-inline: auto;
+}
+
+.game-hud-indicators .game-laser-card .credential-gauge {
+    width: auto;
+    min-width: 0;
+    height: auto;
+    gap: 6px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.game-hud-indicators .game-energy-card .credential-gauge,
+.game-hud-indicators .game-shield-card .credential-gauge,
+.game-hud-indicators .game-laser-card .credential-gauge {
+    box-sizing: border-box;
+    width: 100%;
+    justify-self: stretch;
+    justify-items: center;
+}
+
+.game-hud-indicators .game-laser-card .credential-gauge-label {
+    font-size: 0.44rem;
+}
+
+.game-hud-indicators .game-laser-card .credential-laser-icon {
+    display: block;
+    width: 46px;
+    height: 48px;
+    justify-self: center;
+    margin-inline: auto;
+}
+
+.game-hud-indicators .game-laser-card .game-laser-status {
+    font-size: 0.4rem;
+}
+
+.game-hud-indicators.is-retracted .credential-radar-card,
+.game-hud-indicators.is-retracted .credential-aircraft-card,
+.game-hud-indicators.is-retracted .game-energy-card,
+.game-hud-indicators.is-retracted .game-shield-card,
+.game-hud-indicators.is-retracted .game-laser-card {
+    transform: translateX(calc(-100% - 24px));
+    opacity: 0;
+}
+
+.game-hud-indicators .credential-aircraft-card svg {
+    width: 48px;
+    height: 52px;
+}
+
+.game-hud-indicators .game-aircraft-impact-count {
+    font-size: 0.52rem;
+    letter-spacing: 0;
+}
+
+.game-hud-indicators .credential-aircraft-card .aircraft-shield-meter {
+    display: none;
+}
+
+.game-hud-indicators .credential-gauge {
+    width: 42px;
+    justify-items: center;
+}
+
+.game-hud-indicators .credential-gauge-label {
+    font-size: 0.44rem;
+    letter-spacing: 0;
+}
+
+.game-hud-indicators .credential-gauge--shield {
+    width: 38px;
+}
+
+.game-hud-indicators .credential-shield-icon {
+    width: 27px;
+    height: 38px;
+}
+
+.game-hud-indicators .credential-gauge--laser {
+    width: 48px;
+    gap: 1px;
+}
+
+.game-hud-indicators .credential-laser-icon {
+    width: 34px;
+    height: 40px;
+}
+
+.game-hud-indicators .game-laser-status {
+    font-size: 0.36rem;
+}
+
+.game-hud-indicators .credential-gauge--energy {
+    width: 40px;
+}
+
+.game-hud-indicators .energy-bolt-icon {
+    width: 26px;
+    height: 38px;
+}
+
+.game-hud-indicators .credential-gauge-track {
+    width: 8px;
+    height: 34px;
+}
+
+.game-hud-indicators .credential-radar-card,
+.game-hud-indicators .credential-aircraft-card,
+.game-hud-indicators .credential-gauge {
+    color: #fff;
+}
+
+.game-hud-indicators .credential-radar-card .credential-gauge-label,
+.game-hud-indicators .credential-aircraft-card .credential-gauge-label {
+    color: #fff;
+    font-size: 0.44rem;
+}
+
+@media (max-width: 680px) {
+    :root {
+        --mission-card-width: clamp(104px, 31vw, 120px);
+        --mission-card-height: 78px;
+    }
+
+    .game-mission-cards {
+        bottom: 6px;
+        right: 6px;
+        width: var(--mission-card-width);
+        gap: 6px;
+    }
+
+    .mission-objective-card {
+        min-height: var(--mission-card-height);
+        gap: 4px;
+        padding: 6px;
+    }
+
+    .mission-objective-label { font-size: 0.42rem; }
+    .mission-objective-status { font-size: 0.48rem; }
+
+    .game-container.is-playing .game-score-card {
+        height: 40px;
+        padding: 3px 0;
+    }
+
+    .game-container.is-playing .game-score-total {
+        font-size: 0.7rem;
+    }
+
+    .game-container.is-playing .game-player-status,
+    .game-container.is-playing .game-ranking-status {
+        max-width: calc(50% - 58px);
+        font-size: 0.36rem;
+        letter-spacing: 0;
+    }
+
+    .game-container.is-playing .game-player-status { left: 5px; }
+    .game-container.is-playing .game-ranking-status { right: 5px; }
+
+    .game-container.is-playing .game-hud-indicators {
+        right: 4px;
+        left: 4px;
+        height: 72px;
+        grid-template-columns:
+            auto auto auto
+            minmax(clamp(3.2rem, 14vw, 5rem), auto)
+            auto auto auto;
+        gap: 1px;
+    }
+
+    .game-hud-indicators .credential-radar-card {
+        bottom: 8px;
+        left: 8px;
+        width: var(--mission-card-width);
+        height: var(--mission-card-height);
+        padding: 6px;
+    }
+
+    .game-hud-indicators .credential-radar-scope {
+        width: 50px;
+        height: 50px;
+    }
+
+    .game-hud-indicators .credential-aircraft-card {
+        bottom: 92px;
+        left: 8px;
+        width: var(--mission-card-width);
+        height: var(--mission-card-height);
+        gap: 1px;
+        padding: 6px;
+    }
+
+    .game-hud-indicators .game-shield-card {
+        bottom: 260px;
+        left: 8px;
+        width: var(--mission-card-width);
+        height: var(--mission-card-height);
+        padding: 6px;
+    }
+
+    .game-hud-indicators .game-energy-card {
+        bottom: 344px;
+        left: 8px;
+        width: var(--mission-card-width);
+        height: var(--mission-card-height);
+        padding: 6px;
+    }
+
+    .game-hud-indicators .game-laser-card {
+        bottom: 176px;
+        left: 8px;
+        width: var(--mission-card-width);
+        height: var(--mission-card-height);
+        padding: 6px;
+    }
+
+    .game-hud-indicators .game-shield-card .credential-gauge {
+        gap: 4px;
+    }
+
+    .game-hud-indicators .game-shield-card .credential-gauge-label {
+        font-size: 0.36rem;
+    }
+
+    .game-hud-indicators .game-shield-card .credential-shield-icon {
+        width: 38px;
+        height: 42px;
+    }
+
+    .game-hud-indicators .game-energy-card .credential-gauge {
+        gap: 4px;
+    }
+
+    .game-hud-indicators .game-energy-card .credential-gauge-label {
+        font-size: 0.36rem;
+    }
+
+    .game-hud-indicators .game-energy-card .energy-bolt-icon {
+        width: 38px;
+        height: 42px;
+    }
+
+    .game-hud-indicators .game-laser-card .credential-gauge {
+        gap: 4px;
+    }
+
+    .game-hud-indicators .game-laser-card .credential-gauge-label {
+        font-size: 0.36rem;
+    }
+
+    .game-hud-indicators .game-laser-card .credential-laser-icon {
+        width: 38px;
+        height: 38px;
+    }
+
+    .game-hud-indicators .game-laser-card .game-laser-status {
+        font-size: 0.32rem;
+    }
+
+    .game-hud-indicators .credential-aircraft-card svg {
+        width: 44px;
+        height: 46px;
+    }
+
+    .game-hud-indicators .game-aircraft-impact-count {
+        font-size: 0.4rem;
+    }
+
+    .game-hud-indicators .credential-gauge {
+        width: 34px;
+        padding: 2px 0;
+    }
+
+    .game-hud-indicators .credential-gauge--laser {
+        width: 40px;
+    }
+
+    .game-hud-indicators .credential-laser-icon {
+        width: 29px;
+        height: 36px;
+    }
+
+    .game-hud-indicators .game-laser-status,
+    .game-hud-indicators .credential-gauge-label,
+    .game-hud-indicators .credential-radar-card .credential-gauge-label,
+    .game-hud-indicators .credential-aircraft-card .credential-gauge-label {
+        font-size: 0.34rem;
+    }
+
+    .game-hud-indicators .credential-shield-icon {
+        width: 24px;
+        height: 34px;
+    }
+
+    .game-hud-indicators .energy-bolt-icon {
+        width: 23px;
+        height: 34px;
+    }
+
+}

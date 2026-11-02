@@ -3,7 +3,7 @@ import logging
 import sqlite3
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 
 ROOT = Path(__file__).resolve().parent
@@ -12,6 +12,7 @@ HOST = "127.0.0.1"
 PORT = 8000
 MAX_REQUEST_BYTES = 16_384
 MAX_ENEMY_TARGETS = 160
+MAX_MISSION_TARGETS = MAX_ENEMY_TARGETS + 2
 AGE_GROUPS = (
     "7 a 8 anos",
     "9 a 11 anos",
@@ -146,8 +147,8 @@ def initialize_database():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 player_id INTEGER NOT NULL REFERENCES surveys(id),
                 won INTEGER NOT NULL CHECK (won IN (0, 1)),
-                targets_hit INTEGER NOT NULL CHECK (targets_hit BETWEEN 0 AND {MAX_ENEMY_TARGETS}),
-                targets_lost INTEGER NOT NULL CHECK (targets_lost BETWEEN 0 AND {MAX_ENEMY_TARGETS}),
+                targets_hit INTEGER NOT NULL CHECK (targets_hit BETWEEN 0 AND {MAX_MISSION_TARGETS}),
+                targets_lost INTEGER NOT NULL CHECK (targets_lost BETWEEN 0 AND {MAX_MISSION_TARGETS}),
                 people_rescued INTEGER NOT NULL CHECK (people_rescued BETWEEN 0 AND 20),
                 mission_score INTEGER NOT NULL CHECK (mission_score >= 0),
                 lives_remaining INTEGER NOT NULL CHECK (lives_remaining BETWEEN 0 AND 5),
@@ -158,15 +159,15 @@ def initialize_database():
         arcade_matches_schema = connection.execute(
             "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'arcade_matches'"
         ).fetchone()[0]
-        if f"BETWEEN 0 AND {MAX_ENEMY_TARGETS}" not in arcade_matches_schema:
+        if f"BETWEEN 0 AND {MAX_MISSION_TARGETS}" not in arcade_matches_schema:
             connection.execute(
                 f"""
                 CREATE TABLE arcade_matches_updated (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     player_id INTEGER NOT NULL REFERENCES surveys(id),
                     won INTEGER NOT NULL CHECK (won IN (0, 1)),
-                    targets_hit INTEGER NOT NULL CHECK (targets_hit BETWEEN 0 AND {MAX_ENEMY_TARGETS}),
-                    targets_lost INTEGER NOT NULL CHECK (targets_lost BETWEEN 0 AND {MAX_ENEMY_TARGETS}),
+                    targets_hit INTEGER NOT NULL CHECK (targets_hit BETWEEN 0 AND {MAX_MISSION_TARGETS}),
+                    targets_lost INTEGER NOT NULL CHECK (targets_lost BETWEEN 0 AND {MAX_MISSION_TARGETS}),
                     people_rescued INTEGER NOT NULL CHECK (people_rescued BETWEEN 0 AND 20),
                     mission_score INTEGER NOT NULL CHECK (mission_score >= 0),
                     lives_remaining INTEGER NOT NULL CHECK (lives_remaining BETWEEN 0 AND 5),
@@ -191,18 +192,119 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
     def end_headers(self):
-        if urlsplit(self.path).path == "/index.html":
+        if urlsplit(self.path).path in ("/index.html", "/css/style.css"):
             self.send_header("Cache-Control", "no-store")
         super().end_headers()
 
     def do_GET(self):
-        path = unquote(urlsplit(self.path).path)
+        parsed_path = urlsplit(self.path)
+        path = unquote(parsed_path.path)
         if path == "/api/health":
             self._send_json(200, {"status": "ok"})
+            return
+        if path == "/api/leaderboard":
+            origin = self.headers.get("Origin")
+            if origin and not self._is_local_origin(origin):
+                self._send_json(403, {"error": "A origem da página não é permitida."})
+                return
+
+            try:
+                query = parse_qs(parsed_path.query, keep_blank_values=True, strict_parsing=True)
+                match_ids = query.get("match_id", [])
+                scores = query.get("score", [])
+                if set(query) - {"match_id", "score"} or len(match_ids) > 1 or len(scores) > 1:
+                    raise ValueError
+                match_id = None
+                if match_ids:
+                    if not match_ids[0].isdigit() or int(match_ids[0]) <= 0:
+                        raise ValueError
+                    match_id = int(match_ids[0])
+                live_score = None
+                if scores:
+                    if not scores[0].isdigit() or int(scores[0]) > 1_000_000:
+                        raise ValueError
+                    live_score = int(scores[0])
+            except ValueError:
+                self._send_json(400, {"error": "O identificador da partida é inválido."})
+                return
+
+            try:
+                with sqlite3.connect(DATABASE) as connection:
+                    connection.row_factory = sqlite3.Row
+                    entries = connection.execute(
+                        """
+                        SELECT arcade_matches.id, surveys.name,
+                               arcade_matches.mission_score, arcade_matches.won,
+                               arcade_matches.targets_hit, arcade_matches.targets_lost,
+                               arcade_matches.people_rescued, arcade_matches.lives_remaining,
+                               ROW_NUMBER() OVER (
+                                   ORDER BY arcade_matches.mission_score DESC,
+                                            arcade_matches.won DESC,
+                                            arcade_matches.created_at ASC,
+                                            arcade_matches.id ASC
+                               ) AS rank
+                        FROM arcade_matches
+                        JOIN surveys ON surveys.id = arcade_matches.player_id
+                        ORDER BY arcade_matches.mission_score DESC,
+                                 arcade_matches.won DESC,
+                                 arcade_matches.created_at ASC,
+                                 arcade_matches.id ASC
+                        LIMIT 10
+                        """
+                    ).fetchall()
+                    current_rank = None
+                    if match_id is not None:
+                        row = connection.execute(
+                            """
+                            SELECT rank FROM (
+                                SELECT arcade_matches.id,
+                                       ROW_NUMBER() OVER (
+                                           ORDER BY arcade_matches.mission_score DESC,
+                                                    arcade_matches.won DESC,
+                                                    arcade_matches.created_at ASC,
+                                                    arcade_matches.id ASC
+                                       ) AS rank
+                                FROM arcade_matches
+                            )
+                            WHERE id = ?
+                            """,
+                            (match_id,),
+                        ).fetchone()
+                        current_rank = row["rank"] if row else None
+                    live_rank = None
+                    if live_score is not None:
+                        row = connection.execute(
+                            """
+                            SELECT COUNT(*) + 1 AS rank
+                            FROM arcade_matches
+                            WHERE mission_score >= ?
+                            """,
+                            (live_score,),
+                        ).fetchone()
+                        live_rank = row["rank"]
+            except sqlite3.Error:
+                logging.exception("Falha ao carregar o ranking no SQLite.")
+                self._send_json(500, {"error": "Não foi possível carregar o ranking. Tente novamente."})
+                return
+
+            self._send_json(
+                200,
+                {
+                    "entries": [dict(entry) for entry in entries],
+                    "current_rank": current_rank,
+                    "live_rank": live_rank,
+                },
+            )
             return
 
         if path in ("", "/"):
             self.path = "/index.html"
+        elif path == "/css/style.css":
+            requested_file = (ROOT / path.lstrip("/")).resolve()
+            stylesheet_directory = (ROOT / "css").resolve()
+            if requested_file.parent != stylesheet_directory or requested_file.suffix.lower() != ".css":
+                self.send_error(404)
+                return
         elif path.startswith("/img/"):
             requested_file = (ROOT / path.lstrip("/")).resolve()
             image_directory = (ROOT / "img").resolve()
@@ -222,7 +324,7 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
         super().do_GET()
 
     def do_OPTIONS(self):
-        if urlsplit(self.path).path not in ("/api/survey", "/api/arcade-matches"):
+        if urlsplit(self.path).path not in ("/api/survey", "/api/arcade-matches", "/api/leaderboard"):
             self.send_error(404)
             return
 
@@ -233,7 +335,8 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
 
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", origin)
-        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        allowed_methods = "GET, OPTIONS" if urlsplit(self.path).path == "/api/leaderboard" else "POST, OPTIONS"
+        self.send_header("Access-Control-Allow-Methods", allowed_methods)
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.send_header("Access-Control-Max-Age", "600")
         self.send_header("Vary", "Origin")
@@ -361,8 +464,8 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
             return
 
         numeric_fields = {
-            "targets_hit": (0, MAX_ENEMY_TARGETS),
-            "targets_lost": (0, MAX_ENEMY_TARGETS),
+            "targets_hit": (0, MAX_MISSION_TARGETS),
+            "targets_lost": (0, MAX_MISSION_TARGETS),
             "people_rescued": (0, 20),
             "mission_score": (0, 1_000_000),
             "lives_remaining": (0, 5),
@@ -374,7 +477,7 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
                 self._send_json(400, {"error": "As informações da partida são inválidas."})
                 return
             values[field] = value
-        if values["targets_hit"] + values["targets_lost"] > MAX_ENEMY_TARGETS:
+        if values["targets_hit"] + values["targets_lost"] > MAX_MISSION_TARGETS:
             self._send_json(400, {"error": "A quantidade de alvos da partida é inválida."})
             return
 
