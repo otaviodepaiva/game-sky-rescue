@@ -13,6 +13,8 @@ No card de derrota, “JOGAR NOVAMENTE” salva o resultado da partida, registra
 
 O décimo bonequinho comum inicia a sequência dos porta-aviões quando sai da tela. O apoio restaura as cinco vidas ao ser sobrevoado e atravessa a tela a 70 px/s; 27 segundos após sua aparição, surge o porta-aviões gigante vermelho, que atravessa o cenário e ataca com canhões direcionados e lasers em 12 direções. Após sua passagem, três porta-aviões de recarga surgem em intervalos de 27 segundos e atravessam a tela à mesma velocidade de 70 px/s. As levas regulares continuam normalmente, e a aeronave gigante vermelha só aparece no confronto final, após a resolução dos 160 caças e a passagem desses três porta-aviões.
 
+Durante os intervalos entre esses porta-aviões de recarga, duas frotas extras de dez caças surgem em cores diferentes. Elas mantêm o combate ativo, mas não alteram a contagem dos 160 alvos principais.
+
 Os caças da 3ª frota começam a disparar lasers aleatoriamente (a partir da 5ª leva); a aeronave gigante não dispara lasers. Na sexta leva, o caça branco do jogador recebe canhões laser nas asas; segure a barra de espaço para dispará-los. O card “LASER”, ao lado direito do escudo, indica quando os canhões estão liberados.
 
 O jogo não possui sistema de combustível nem postos de abastecimento; a missão depende apenas dos objetivos, das vidas e dos escudos da aeronave.

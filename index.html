@@ -173,6 +173,25 @@
                     <div><dt>Integridade da aeronave</dt><dd id="reportIntegrity">100%</dd></div>
                     <div><dt>Vidas restantes</dt><dd id="reportLives">5/5</dd></div>
                 </dl>
+                <h3 class="mission-report-objectives-title">MISSÕES</h3>
+                <ul class="mission-report-objectives">
+                    <li id="reportObjectiveSeventyPercent">
+                        <span>Destruir 70% das forças inimigas <strong id="reportObjectiveSeventyPercentProgress"></strong></span>
+                        <span class="mission-report-objective-result"><span id="reportObjectiveSeventyPercentStatus"></span><span class="mission-report-medal" aria-label="Missão cumprida" hidden>🏅</span><span class="mission-report-failure-icon" aria-label="Missão não cumprida" hidden>👎</span></span>
+                    </li>
+                    <li id="reportObjectiveAllEnemies">
+                        <span>Destruir todas as forças inimigas <strong id="reportObjectiveAllEnemiesProgress"></strong></span>
+                        <span class="mission-report-objective-result"><span id="reportObjectiveAllEnemiesStatus"></span><span class="mission-report-medal" aria-label="Missão cumprida" hidden>🏅</span><span class="mission-report-failure-icon" aria-label="Missão não cumprida" hidden>👎</span></span>
+                    </li>
+                    <li id="reportObjectiveRescue">
+                        <span>Resgatar 10 pessoas <strong id="reportObjectiveRescueProgress"></strong></span>
+                        <span class="mission-report-objective-result"><span id="reportObjectiveRescueStatus"></span><span class="mission-report-medal" aria-label="Missão cumprida" hidden>🏅</span><span class="mission-report-failure-icon" aria-label="Missão não cumprida" hidden>👎</span></span>
+                    </li>
+                    <li id="reportObjectiveIntegrity">
+                        <span>Manter 100% de integridade da aeronave</span>
+                        <span class="mission-report-objective-result"><span id="reportObjectiveIntegrityStatus"></span><span class="mission-report-medal" aria-label="Missão cumprida" hidden>🏅</span><span class="mission-report-failure-icon" aria-label="Missão não cumprida" hidden>👎</span></span>
+                    </li>
+                </ul>
             </section>
             <section class="mission-leaderboard" aria-labelledby="leaderboardTitle">
                 <h3 id="leaderboardTitle">RANKING</h3>
@@ -381,6 +400,8 @@
     let explosions = [];
     let aircraftCarriers = [];
     let sceneryFeaturesRecycled = 0;
+    let bridgesSpawned = 0;
+    let supportCarrierBridge = null;
     let lives = 5;
     let energyWarningLevel = null;
     let criticalAlertInterval = 0;
@@ -396,6 +417,12 @@
     let carrierBossDefeated = false;
     let postBossSupportCarriers = [];
     let nextPostBossSupportCarrierAt = null;
+    let intermissionFleetSchedule = [];
+    let intermissionFleetSpawnActive = false;
+    let intermissionFleetSpawnedCount = 0;
+    let intermissionFleetColorIndex = 0;
+    let intermissionFleetsScheduled = 0;
+    let nextIntermissionEnemySpawnAt = 0;
     let giantBossSpawned = false;
     let victorySequence = null;
     let christinaSpawned = false;
@@ -1748,7 +1775,8 @@
             drawGiantEnemyAircraft(enemy, timestamp);
             return;
         }
-        const fleetIndex = Math.floor((enemy.wave - 1) / 2);
+        const fleetIndex = enemy.fleetColorIndex
+            ?? Math.floor((enemy.wave - 1) / 2);
         drawAircraft(
             enemy.x,
             enemy.y,
@@ -2185,6 +2213,37 @@
             nextEnemySpawnAt = timestamp + 650 + Math.random() * 550;
         }
 
+        if (!intermissionFleetSpawnActive && intermissionFleetSchedule.length
+            && timestamp >= intermissionFleetSchedule[0].at) {
+            intermissionFleetColorIndex = intermissionFleetSchedule.shift().colorIndex;
+            intermissionFleetSpawnActive = true;
+            intermissionFleetSpawnedCount = 0;
+            nextIntermissionEnemySpawnAt = timestamp;
+        }
+        if (intermissionFleetSpawnActive && timestamp >= nextIntermissionEnemySpawnAt) {
+            const size = { width: 82, height: 84 };
+            enemyShips.push({
+                x: size.width / 2 + 8 + Math.random() * Math.max(0, arcadeWidth - size.width - 16),
+                y: -size.height / 2,
+                ...size,
+                alive: true,
+                wave: totalWaves,
+                fleetColorIndex: intermissionFleetColorIndex,
+                isIntermissionFleet: true,
+                energy: 1,
+                maxEnergy: 1,
+                phase: Math.random() * Math.PI * 2,
+                descentSpeed: 125 + Math.random() * 70,
+                canShoot: true,
+                nextLaserAt: timestamp + 700 + Math.random() * 2200
+            });
+            intermissionFleetSpawnedCount++;
+            nextIntermissionEnemySpawnAt = timestamp + 800;
+            if (intermissionFleetSpawnedCount === enemiesPerWave) {
+                intermissionFleetSpawnActive = false;
+            }
+        }
+
         sceneryOffset = (sceneryOffset + 70 * elapsed) % (arcadeHeight + 150);
         scenery.forEach((feature) => {
             feature.y += 70 * elapsed;
@@ -2261,9 +2320,24 @@
                 } else {
                     placeSceneryFeature(feature, Math.min(-80, upstreamY), otherScenery);
                 }
+                if (feature.kind === 'bridge') {
+                    bridgesSpawned++;
+                    if (bridgesSpawned === 5) {
+                        supportCarrierBridge = feature;
+                    }
+                }
                 addRandomRescuee(feature);
             }
         });
+        if (
+            supportCarrierBridge
+            && supportCarrierBridge.y + getSceneryBounds(supportCarrierBridge).halfHeight
+                >= -Math.min(arcadeWidth * 0.23, 148) * 2.7 / 2 - 100
+        ) {
+            spawnSupportCarrier();
+            supportCarrierBridge = null;
+            showCharacterSpeech('Porta-aviões de recarga após a quinta ponte! Sobrevoe-o para restaurar a energia.');
+        }
         aircraftCarriers.forEach((carrier) => {
             if (carrier.expired) return;
             carrier.x = getAircraftCarrierRiverX(carrier, carrier.x);
@@ -2359,8 +2433,10 @@
             }
             if (enemy.y - enemy.height / 2 > arcadeHeight) {
                 enemy.alive = false;
-                targetsLost++;
-                fleetTargetsResolved++;
+                if (!enemy.isIntermissionFleet) {
+                    targetsLost++;
+                    fleetTargetsResolved++;
+                }
                 updateCombatStatus();
             }
         });
@@ -2372,6 +2448,15 @@
             && nextPostBossSupportCarrierAt !== null
             && timestamp >= nextPostBossSupportCarrierAt) {
             spawnSupportCarrier(true);
+            if (postBossSupportCarriers.length < postBossSupportCarrierCount) {
+                for (const delay of [6500, 15500]) {
+                    intermissionFleetSchedule.push({
+                        at: timestamp + delay,
+                        colorIndex: intermissionFleetsScheduled % enemyFleetColors.length
+                    });
+                    intermissionFleetsScheduled++;
+                }
+            }
             nextPostBossSupportCarrierAt = postBossSupportCarriers.length < postBossSupportCarrierCount
                 ? timestamp + aircraftCarrierSpawnInterval
                 : null;
@@ -2495,8 +2580,10 @@
                 ? giantBossPoints
                 : fleetPoints[fleetIndex];
             updateMissionScoreCard();
-            targetsHit++;
-            if (!target.isCarrierBoss && !target.isGiant) fleetTargetsResolved++;
+            if (!target.isIntermissionFleet) {
+                targetsHit++;
+                if (!target.isCarrierBoss && !target.isGiant) fleetTargetsResolved++;
+            }
             if (target.isGiant) {
                 for (let i = 0; i < 8; i++) {
                     const ox = (Math.random() - 0.5) * target.width * 0.7;
@@ -2697,9 +2784,17 @@
         carrierBossDefeated = false;
         postBossSupportCarriers = [];
         nextPostBossSupportCarrierAt = null;
+        intermissionFleetSchedule = [];
+        intermissionFleetSpawnActive = false;
+        intermissionFleetSpawnedCount = 0;
+        intermissionFleetColorIndex = 0;
+        intermissionFleetsScheduled = 0;
+        nextIntermissionEnemySpawnAt = 0;
         giantBossSpawned = false;
         scenery = [];
         sceneryFeaturesRecycled = 0;
+        bridgesSpawned = 0;
+        supportCarrierBridge = null;
         aircraftCarriers = [];
         resizeArcadeCanvas();
         enemyShips = [];
@@ -3201,6 +3296,38 @@
             `${Math.min(peopleRescued, rescueTargetCount)}/${rescueTargetCount}`;
         document.getElementById('reportIntegrity').textContent = damageTaken ? 'Danificada' : '100%';
         document.getElementById('reportLives').textContent = `${lives}/5`;
+        const seventyPercentTarget = Math.ceil(enemyTargetCount * 0.7);
+        const reportObjectives = [
+            {
+                id: 'SeventyPercent',
+                complete: targetsHit >= seventyPercentTarget,
+                progress: `${Math.min(targetsHit, seventyPercentTarget)}/${seventyPercentTarget}`
+            },
+            {
+                id: 'AllEnemies',
+                complete: targetsHit >= enemyTargetCount,
+                progress: `${Math.min(targetsHit, enemyTargetCount)}/${enemyTargetCount}`
+            },
+            {
+                id: 'Rescue',
+                complete: peopleRescued >= rescueTargetCount,
+                progress: `${Math.min(peopleRescued, rescueTargetCount)}/${rescueTargetCount}`
+            },
+            {
+                id: 'Integrity',
+                complete: !damageTaken
+            }
+        ];
+        reportObjectives.forEach((objective) => {
+            const item = document.getElementById(`reportObjective${objective.id}`);
+            item.classList.toggle('is-complete', objective.complete);
+            document.getElementById(`reportObjective${objective.id}Status`).textContent =
+                objective.complete ? 'Cumprida' : 'Não cumprida';
+            item.querySelector('.mission-report-medal').hidden = !objective.complete;
+            item.querySelector('.mission-report-failure-icon').hidden = objective.complete;
+            const progress = document.getElementById(`reportObjective${objective.id}Progress`);
+            if (progress) progress.textContent = objective.progress;
+        });
         document.getElementById('leaderboardStatus').textContent = 'Salvando a partida e carregando o ranking...';
         document.getElementById('leaderboardEntries').replaceChildren();
         document.getElementById('leaderboardPlayerRank').textContent = '';
