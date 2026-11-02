@@ -8,8 +8,9 @@ Na missão de combate aéreo com rolagem vertical, atravesse o mar, as ilhas e a
 
 O jogo não reproduz músicas na abertura, no cadastro ou durante a partida; os efeitos sonoros de combate e alerta permanecem ativos.
 
-Ao perder as cinco vidas, somente o card “CAÇA DESTRUÍDO” aparece sobre a imagem `img/skyrescue-perdeu.png`.
-No card de derrota, “JOGAR NOVAMENTE” salva o resultado da partida, registra novamente o mesmo jogador e inicia outra partida; “NOVO JOGADOR” salva o resultado e retorna à abertura e ao cadastro. A tabela `arcade_matches` de `db/pesquisa.db` guarda o resultado, a pontuação, os alvos, os resgates e as vidas restantes de cada partida.
+Ao perder as cinco vidas, somente o card “MISSÃO MAL-SUCEDIDA” aparece sobre a imagem `img/skyrescue-perdeu.png`.
+No card de derrota, “JOGAR NOVAMENTE” salva o resultado da partida, registra novamente o mesmo jogador e inicia outra partida; “NOVO JOGADOR” salva o resultado e retorna à abertura e ao cadastro. A tabela `arcade_matches` de `db/pesquisa.db` guarda o resultado, a pontuação, os alvos, os resgates, as vidas restantes e a integridade da aeronave de cada partida.
+O ranking desempata partidas com a mesma pontuação pela integridade da aeronave (partidas sem dano ficam à frente), depois pela vitória e pela data. Partidas anteriores à inclusão desse dado mantêm a integridade como desconhecida.
 
 O décimo bonequinho comum inicia a sequência dos porta-aviões quando sai da tela. O apoio restaura as cinco vidas ao ser sobrevoado e atravessa a tela a 70 px/s; 27 segundos após sua aparição, surge o porta-aviões gigante vermelho, que atravessa o cenário e ataca com canhões direcionados e lasers em 12 direções. Após sua passagem, três porta-aviões de recarga surgem em intervalos de 27 segundos e atravessam a tela à mesma velocidade de 70 px/s. As levas regulares continuam normalmente, e a aeronave gigante vermelha só aparece no confronto final, após a resolução dos 160 caças e a passagem desses três porta-aviões.
 

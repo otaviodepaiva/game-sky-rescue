@@ -152,6 +152,7 @@ def initialize_database():
                 people_rescued INTEGER NOT NULL CHECK (people_rescued BETWEEN 0 AND 20),
                 mission_score INTEGER NOT NULL CHECK (mission_score >= 0),
                 lives_remaining INTEGER NOT NULL CHECK (lives_remaining BETWEEN 0 AND 5),
+                integrity_preserved INTEGER CHECK (integrity_preserved IN (0, 1)),
                 created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
             )
             """
@@ -160,6 +161,15 @@ def initialize_database():
             "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'arcade_matches'"
         ).fetchone()[0]
         if f"BETWEEN 0 AND {MAX_MISSION_TARGETS}" not in arcade_matches_schema:
+            arcade_match_columns = {
+                column[1]
+                for column in connection.execute("PRAGMA table_info(arcade_matches)").fetchall()
+            }
+            integrity_select = (
+                "integrity_preserved"
+                if "integrity_preserved" in arcade_match_columns
+                else "NULL"
+            )
             connection.execute(
                 f"""
                 CREATE TABLE arcade_matches_updated (
@@ -171,20 +181,32 @@ def initialize_database():
                     people_rescued INTEGER NOT NULL CHECK (people_rescued BETWEEN 0 AND 20),
                     mission_score INTEGER NOT NULL CHECK (mission_score >= 0),
                     lives_remaining INTEGER NOT NULL CHECK (lives_remaining BETWEEN 0 AND 5),
+                    integrity_preserved INTEGER CHECK (integrity_preserved IN (0, 1)),
                     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
                 )
                 """
             )
             connection.execute(
-                """
+                f"""
                 INSERT INTO arcade_matches_updated
-                    (id, player_id, won, targets_hit, targets_lost, people_rescued, mission_score, lives_remaining, created_at)
-                SELECT id, player_id, won, targets_hit, targets_lost, people_rescued, mission_score, lives_remaining, created_at
+                    (id, player_id, won, targets_hit, targets_lost, people_rescued,
+                     mission_score, lives_remaining, integrity_preserved, created_at)
+                SELECT id, player_id, won, targets_hit, targets_lost, people_rescued,
+                       mission_score, lives_remaining, {integrity_select}, created_at
                 FROM arcade_matches
                 """
             )
             connection.execute("DROP TABLE arcade_matches")
             connection.execute("ALTER TABLE arcade_matches_updated RENAME TO arcade_matches")
+        arcade_match_columns = {
+            column[1]
+            for column in connection.execute("PRAGMA table_info(arcade_matches)").fetchall()
+        }
+        if "integrity_preserved" not in arcade_match_columns:
+            connection.execute(
+                "ALTER TABLE arcade_matches ADD COLUMN integrity_preserved INTEGER "
+                "CHECK (integrity_preserved IN (0, 1))"
+            )
 
 
 class GameRequestHandler(SimpleHTTPRequestHandler):
@@ -212,7 +234,11 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
                 query = parse_qs(parsed_path.query, keep_blank_values=True, strict_parsing=True)
                 match_ids = query.get("match_id", [])
                 scores = query.get("score", [])
-                if set(query) - {"match_id", "score"} or len(match_ids) > 1 or len(scores) > 1:
+                if (
+                    set(query) - {"match_id", "score", "integrity_preserved"}
+                    or len(match_ids) > 1
+                    or len(scores) > 1
+                ):
                     raise ValueError
                 match_id = None
                 if match_ids:
@@ -224,6 +250,10 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
                     if not scores[0].isdigit() or int(scores[0]) > 1_000_000:
                         raise ValueError
                     live_score = int(scores[0])
+                integrity_values = query.get("integrity_preserved", [])
+                if len(integrity_values) > 1 or any(value not in ("0", "1") for value in integrity_values):
+                    raise ValueError
+                live_integrity_preserved = int(integrity_values[0]) if integrity_values else 0
             except ValueError:
                 self._send_json(400, {"error": "O identificador da partida é inválido."})
                 return
@@ -237,8 +267,10 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
                                arcade_matches.mission_score, arcade_matches.won,
                                arcade_matches.targets_hit, arcade_matches.targets_lost,
                                arcade_matches.people_rescued, arcade_matches.lives_remaining,
+                               arcade_matches.integrity_preserved,
                                ROW_NUMBER() OVER (
                                    ORDER BY arcade_matches.mission_score DESC,
+                                            arcade_matches.integrity_preserved DESC,
                                             arcade_matches.won DESC,
                                             arcade_matches.created_at ASC,
                                             arcade_matches.id ASC
@@ -246,6 +278,7 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
                         FROM arcade_matches
                         JOIN surveys ON surveys.id = arcade_matches.player_id
                         ORDER BY arcade_matches.mission_score DESC,
+                                 arcade_matches.integrity_preserved DESC,
                                  arcade_matches.won DESC,
                                  arcade_matches.created_at ASC,
                                  arcade_matches.id ASC
@@ -260,6 +293,7 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
                                 SELECT arcade_matches.id,
                                        ROW_NUMBER() OVER (
                                            ORDER BY arcade_matches.mission_score DESC,
+                                                    arcade_matches.integrity_preserved DESC,
                                                     arcade_matches.won DESC,
                                                     arcade_matches.created_at ASC,
                                                     arcade_matches.id ASC
@@ -277,9 +311,17 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
                             """
                             SELECT COUNT(*) + 1 AS rank
                             FROM arcade_matches
-                            WHERE mission_score >= ?
+                            WHERE mission_score > ?
+                               OR (
+                                   mission_score = ?
+                                   AND integrity_preserved >= ?
+                               )
                             """,
-                            (live_score,),
+                            (
+                                live_score,
+                                live_score,
+                                live_integrity_preserved,
+                            ),
                         ).fetchone()
                         live_rank = row["rank"]
             except sqlite3.Error:
@@ -463,6 +505,11 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
             self._send_json(400, {"error": "O resultado da partida é inválido."})
             return
 
+        integrity_preserved = payload.get("integrity_preserved")
+        if not isinstance(integrity_preserved, bool):
+            self._send_json(400, {"error": "A integridade da aeronave é inválida."})
+            return
+
         numeric_fields = {
             "targets_hit": (0, MAX_MISSION_TARGETS),
             "targets_lost": (0, MAX_MISSION_TARGETS),
@@ -490,8 +537,9 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
                 cursor = connection.execute(
                     """
                     INSERT INTO arcade_matches
-                        (player_id, won, targets_hit, targets_lost, people_rescued, mission_score, lives_remaining)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                        (player_id, won, targets_hit, targets_lost, people_rescued,
+                         mission_score, lives_remaining, integrity_preserved)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         player_id,
@@ -501,6 +549,7 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
                         values["people_rescued"],
                         values["mission_score"],
                         values["lives_remaining"],
+                        int(integrity_preserved),
                     ),
                 )
         except sqlite3.Error:

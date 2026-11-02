@@ -714,9 +714,8 @@ button { color: inherit; }
 
 .mission-leaderboard li span {
     flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .mission-leaderboard li strong {
@@ -1235,14 +1234,14 @@ button { color: inherit; }
     font-weight: 700;
 }
 .rescue-transition-screen .survey-panel.credential-card-entering {
-    animation: credential-card-enter 2500ms linear both;
+    animation: credential-card-enter 220ms ease both;
     will-change: transform;
 }
 @keyframes credential-card-exit {
     to { transform: translate3d(100%, 0, 0); }
 }
 .rescue-transition-screen .survey-panel.credential-card-exiting {
-    animation: credential-card-exit 2500ms linear forwards;
+    animation: credential-card-exit 220ms ease forwards;
     will-change: transform;
 }
 .rescue-transition-screen .survey-panel.credential-card-confirmed {

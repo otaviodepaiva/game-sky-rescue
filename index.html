@@ -2952,7 +2952,7 @@
         const requestId = ++liveRankingRequestId;
         try {
             const response = await fetch(
-                `${apiBaseUrl}/api/leaderboard?score=${encodeURIComponent(missionScore)}`
+                `${apiBaseUrl}/api/leaderboard?score=${encodeURIComponent(missionScore)}&integrity_preserved=${Number(!damageTaken)}`
             );
             const responseText = await response.text();
             let result;
@@ -3283,7 +3283,7 @@
         endCard.classList.toggle('won', won);
         document.getElementById('endTitle').textContent = won
             ? 'MISSÃO BEM-SUCEDIDA'
-            : 'CAÇA DESTRUÍDO';
+            : 'MISSÃO MAL-SUCEDIDA';
         const targetSummary = `Alvos acertados: ${targetsHit} · perdidos: ${targetsLost}. Pessoas resgatadas: ${peopleRescued}.`;
         document.getElementById('endMessage').textContent = won
             ? `Você destruiu o porta-aviões gigante e derrotou o caça vermelho gigante. ${targetSummary}`
@@ -3339,7 +3339,8 @@
             targets_lost: targetsLost,
             people_rescued: peopleRescued,
             mission_score: missionScore,
-            lives_remaining: lives
+            lives_remaining: lives,
+            integrity_preserved: !damageTaken
         };
         document.getElementById('restartButton').textContent = 'JOGAR NOVAMENTE';
         document.getElementById('newPlayerButton').hidden = false;
@@ -3415,7 +3416,7 @@
                 item.dataset.rank = entry.rank;
                 item.classList.toggle('is-current-match', entry.id === savedMatch.id);
                 const pilot = document.createElement('span');
-                pilot.textContent = entry.name.trim().split(/\s+/)[0];
+                pilot.textContent = entry.name;
                 const score = document.createElement('strong');
                 score.textContent = Number(entry.mission_score).toLocaleString('pt-BR');
                 item.append(pilot, score);
