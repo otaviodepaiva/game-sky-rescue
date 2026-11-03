@@ -127,6 +127,28 @@ button { color: inherit; }
     line-height: 1.25;
 }
 
+.mission-objective-heading {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.mission-objective-heading .mission-objective-label {
+    flex: 1;
+    min-width: 0;
+}
+
+.mission-objective-medal,
+.mission-objective-failure {
+    flex: 0 0 auto;
+    font-size: 0.76rem;
+    line-height: 1;
+}
+
+.mission-objective-medal { color: #ffe27a; }
+.mission-objective-failure { color: #ff8d8d; }
+
 .mission-objective-status {
     color: #fff;
     font-size: 0.62rem;
@@ -558,8 +580,53 @@ button { color: inherit; }
     text-align: left;
 }
 
+.mission-end-layout {
+    display: flex;
+    width: min(1174px, 100%);
+    align-items: flex-end;
+    justify-content: flex-end;
+    gap: 14px;
+}
+
+.score-tiebreak-notice {
+    flex: 0 0 260px;
+    padding: 16px;
+    border: 1px solid rgba(125, 232, 245, 0.9);
+    border-radius: 8px;
+    background: linear-gradient(160deg, rgba(9, 29, 49, 0.96), rgba(9, 29, 49, 0.9));
+    color: #e5f4ff;
+    text-align: left;
+    transform-origin: right center;
+    animation: score-tiebreak-notice-enter 360ms ease-out both;
+}
+
+.score-tiebreak-notice h3 {
+    margin: 0 0 10px;
+    color: #7de8f5;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+}
+
+.score-tiebreak-notice p {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.5;
+}
+
+@keyframes score-tiebreak-notice-enter {
+    from {
+        opacity: 0;
+        transform: scaleX(0);
+    }
+    to {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
 .end-screen.mission-end-background .end-card {
     display: grid;
+    flex: 1 1 900px;
     width: min(900px, 100%);
     max-height: calc(100dvh - 36px);
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -762,6 +829,7 @@ button { color: inherit; }
     }
 
     .end-screen.mission-end-background .end-card {
+        flex: 0 1 auto;
         max-height: calc(100dvh - 20px);
         grid-template-columns: minmax(0, 1fr);
         gap: 9px;
@@ -786,6 +854,36 @@ button { color: inherit; }
     .mission-end-report dd { font-size: 0.72rem; }
     .mission-report-objectives li { padding: 6px; font-size: 0.63rem; }
     .mission-report-objective-result { font-size: 0.56rem; }
+}
+
+@media (max-width: 1100px) {
+    .mission-end-layout {
+        width: min(900px, 100%);
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .score-tiebreak-notice {
+        flex: 0 0 auto;
+        align-self: flex-end;
+        width: min(360px, 100%);
+        transform-origin: center bottom;
+    }
+
+    .end-screen.mission-end-background .end-card {
+        flex: 0 1 auto;
+    }
+}
+
+@media (max-width: 680px) {
+    .score-tiebreak-notice {
+        width: 100%;
+        padding: 10px 12px;
+    }
+
+    .score-tiebreak-notice h3 { margin-bottom: 5px; }
+    .score-tiebreak-notice p { font-size: 0.7rem; }
 }
 
 .end-screen.mission-end-background .end-action-progress {
@@ -1196,11 +1294,22 @@ button { color: inherit; }
     position: absolute;
     z-index: 1;
     inset: 0;
-    display: flex;
-    align-items: flex-end;
+    display: grid;
+    grid-template-columns: minmax(0, 300px) minmax(0, min(480px, 40vw));
+    align-content: end;
+    align-items: start;
     justify-content: flex-end;
+    gap: 14px;
     padding: 16px 28px 50px clamp(20px, 5vw, 64px);
     background: transparent;
+}
+
+.survey-overlay:has(.non-student-notice[hidden]) {
+    grid-template-columns: minmax(0, min(480px, 40vw));
+}
+
+.survey-overlay:not(:has(.non-student-notice[hidden])) .survey-panel {
+    grid-column: 2;
 }
 
 .rescue-transition-screen .survey-overlay { pointer-events: none; }
@@ -1214,11 +1323,61 @@ button { color: inherit; }
     border: 1px solid #7de8f5;
     border-radius: 12px;
     background: linear-gradient(160deg, rgba(9, 29, 49, 0.94), rgba(9, 29, 49, 0.72));
-    box-shadow: inset 0 0 20px rgba(0, 255, 128, 0.08), 0 0 12px rgba(0, 255, 128, 0.12);
+    box-shadow: none;
     color: #7de8f5;
     font-family: "Courier New", monospace;
     font-size: 0.8rem;
     pointer-events: auto;
+}
+
+.non-student-notice {
+    padding: 20px;
+    border: 1px solid #7de8f5;
+    border-radius: 8px;
+    background: rgba(9, 29, 49, 0.94);
+    color: #fff;
+    font-family: "Courier New", monospace;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.5;
+    transform-origin: right center;
+}
+
+.non-student-notice.non-student-notice-entering {
+    animation: non-student-notice-enter 260ms ease-out both;
+}
+
+.non-student-notice.non-student-notice-exiting {
+    animation: non-student-notice-exit 260ms ease-in both;
+}
+
+.non-student-notice h3 {
+    margin: 0 0 12px;
+    color: #7de8f5;
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+}
+
+@keyframes non-student-notice-enter {
+    from {
+        opacity: 0;
+        transform: scaleX(0);
+    }
+    to {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+@keyframes non-student-notice-exit {
+    from {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+    to {
+        opacity: 0;
+        transform: scaleX(0);
+    }
 }
 
 .survey-panel h2 {
@@ -1233,6 +1392,12 @@ button { color: inherit; }
     color: #fff;
     font-weight: 700;
 }
+.rescue-transition-screen .survey-panel,
+.rescue-transition-screen .survey-panel *,
+.rescue-transition-screen .non-student-notice {
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
 .rescue-transition-screen .survey-panel.credential-card-entering {
     animation: credential-card-enter 220ms ease both;
     will-change: transform;
@@ -1246,31 +1411,24 @@ button { color: inherit; }
 }
 .rescue-transition-screen .survey-panel.credential-card-confirmed {
     border-color: #fff;
-    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.18), 0 0 22px rgba(255, 255, 255, 0.75);
     color: #fff;
-    text-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
 }
 .rescue-transition-screen .credential-card-confirmed h2 {
     color: #fff;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
 }
 .rescue-transition-screen .credential-card-confirmed .survey-field input,
 .rescue-transition-screen .credential-card-confirmed .survey-field select,
 .rescue-transition-screen .credential-card-confirmed .survey-fieldset {
     border-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.45);
 }
 .rescue-transition-screen .credential-card-confirmed .survey-field input,
 .rescue-transition-screen .credential-card-confirmed .survey-field select {
     color: #fff;
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
 }
 .rescue-transition-screen .credential-card-confirmed #surveySubmit {
     border-color: #fff;
     background: rgba(255, 255, 255, 0.18);
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.75);
     color: #fff;
-    text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
 }
 .survey-panel > p { line-height: 1.5; }
 .survey-fields {
@@ -1339,7 +1497,22 @@ button { color: inherit; }
 .survey-error { min-height: 0; margin: 2px 0 0; color: #ff8d8d; }
 @media (max-width: 580px) {
     .survey-fields { grid-template-columns: minmax(0, 1fr); }
-    .survey-overlay { align-items: center; justify-content: center; padding: 12px; }
+    .survey-overlay {
+        grid-template-columns: minmax(0, 1fr);
+        align-content: center;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px;
+    }
+    .survey-overlay:not(:has(.non-student-notice[hidden])) .survey-panel {
+        grid-column: 1;
+    }
+    .non-student-notice {
+        width: min(520px, 100%);
+        padding: 8px 10px;
+        font-size: 0.72rem;
+    }
     .survey-panel { width: min(520px, 100%); max-height: calc(100vh - 24px); padding: 12px 12px 5px; }
 }
 

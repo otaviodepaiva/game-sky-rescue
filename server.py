@@ -270,16 +270,17 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
                                arcade_matches.integrity_preserved,
                                ROW_NUMBER() OVER (
                                    ORDER BY arcade_matches.mission_score DESC,
-                                            arcade_matches.integrity_preserved DESC,
                                             arcade_matches.won DESC,
+                                            arcade_matches.integrity_preserved DESC,
                                             arcade_matches.created_at ASC,
                                             arcade_matches.id ASC
                                ) AS rank
                         FROM arcade_matches
                         JOIN surveys ON surveys.id = arcade_matches.player_id
+                        WHERE surveys.is_student = 1
                         ORDER BY arcade_matches.mission_score DESC,
-                                 arcade_matches.integrity_preserved DESC,
                                  arcade_matches.won DESC,
+                                 arcade_matches.integrity_preserved DESC,
                                  arcade_matches.created_at ASC,
                                  arcade_matches.id ASC
                         LIMIT 10
@@ -293,12 +294,14 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
                                 SELECT arcade_matches.id,
                                        ROW_NUMBER() OVER (
                                            ORDER BY arcade_matches.mission_score DESC,
-                                                    arcade_matches.integrity_preserved DESC,
                                                     arcade_matches.won DESC,
+                                                    arcade_matches.integrity_preserved DESC,
                                                     arcade_matches.created_at ASC,
                                                     arcade_matches.id ASC
                                        ) AS rank
                                 FROM arcade_matches
+                                JOIN surveys ON surveys.id = arcade_matches.player_id
+                                WHERE surveys.is_student = 1
                             )
                             WHERE id = ?
                             """,
@@ -311,11 +314,21 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
                             """
                             SELECT COUNT(*) + 1 AS rank
                             FROM arcade_matches
-                            WHERE mission_score > ?
-                               OR (
-                                   mission_score = ?
-                                   AND integrity_preserved >= ?
-                               )
+                            JOIN surveys ON surveys.id = arcade_matches.player_id
+                            WHERE surveys.is_student = 1
+                              AND (
+                                  mission_score > ?
+                                  OR (
+                                      mission_score = ?
+                                      AND (
+                                          won > 0
+                                          OR (
+                                              won = 0
+                                              AND integrity_preserved >= ?
+                                          )
+                                      )
+                                  )
+                              )
                             """,
                             (
                                 live_score,
@@ -531,8 +544,15 @@ class GameRequestHandler(SimpleHTTPRequestHandler):
         try:
             with sqlite3.connect(DATABASE) as connection:
                 connection.execute("PRAGMA foreign_keys = ON")
-                if connection.execute("SELECT 1 FROM surveys WHERE id = ?", (player_id,)).fetchone() is None:
+                player = connection.execute(
+                    "SELECT is_student FROM surveys WHERE id = ?",
+                    (player_id,),
+                ).fetchone()
+                if player is None:
                     self._send_json(404, {"error": "O cadastro do jogador não foi encontrado."})
+                    return
+                if not player[0]:
+                    self._send_json(403, {"error": "Jogadores não alunos não participam do ranking."})
                     return
                 cursor = connection.execute(
                     """

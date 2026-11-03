@@ -24,22 +24,38 @@
     </section>
     <aside id="missionObjectives" class="game-mission-cards" aria-label="Cards de objetivos da missão" aria-live="polite" hidden>
         <article id="seventyPercentObjective" class="mission-objective-card" role="progressbar" aria-label="Destruição de 70% das forças inimigas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-            <span class="mission-objective-label">DESTRUIR 70% DAS FORÇAS INIMIGAS</span>
+            <span class="mission-objective-heading">
+                <span class="mission-objective-label">DESTRUIR 70% DAS FORÇAS INIMIGAS</span>
+                <span class="mission-objective-medal" aria-hidden="true" hidden>🏅</span>
+                <span class="mission-objective-failure" aria-hidden="true">👎</span>
+            </span>
             <span id="seventyPercentObjectiveStatus" class="mission-objective-status">0/112 (0%)</span>
             <span class="mission-objective-track" aria-hidden="true"><span class="mission-objective-fill"></span></span>
         </article>
         <article id="allEnemiesObjective" class="mission-objective-card" role="progressbar" aria-label="Destruição de 100% das forças inimigas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-            <span class="mission-objective-label">DESTRUIR 100% DAS FORÇAS INIMIGAS</span>
+            <span class="mission-objective-heading">
+                <span class="mission-objective-label">DESTRUIR 100% DAS FORÇAS INIMIGAS</span>
+                <span class="mission-objective-medal" aria-hidden="true" hidden>🏅</span>
+                <span class="mission-objective-failure" aria-hidden="true">👎</span>
+            </span>
             <span id="allEnemiesObjectiveStatus" class="mission-objective-status">0/160 (0%)</span>
             <span class="mission-objective-track" aria-hidden="true"><span class="mission-objective-fill"></span></span>
         </article>
         <article id="noDamageObjective" class="mission-objective-card" role="progressbar" aria-label="Manter 100% de integridade da aeronave" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
-            <span class="mission-objective-label">INTEGRIDADE 100%</span>
+            <span class="mission-objective-heading">
+                <span class="mission-objective-label">INTEGRIDADE 100%</span>
+                <span class="mission-objective-medal" aria-hidden="true" hidden>🏅</span>
+                <span class="mission-objective-failure" aria-hidden="true">👎</span>
+            </span>
             <span id="noDamageObjectiveStatus" class="mission-objective-status">100%</span>
             <span class="mission-objective-track" aria-hidden="true"><span class="mission-objective-fill"></span></span>
         </article>
         <article id="rescueObjective" class="mission-objective-card" role="progressbar" aria-label="Resgatar 100% das pessoas" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-            <span class="mission-objective-label">RESGATE 100%</span>
+            <span class="mission-objective-heading">
+                <span class="mission-objective-label">RESGATE 100%</span>
+                <span class="mission-objective-medal" aria-hidden="true" hidden>🏅</span>
+                <span class="mission-objective-failure" aria-hidden="true">👎</span>
+            </span>
             <span id="rescueObjectiveStatus" class="mission-objective-status">0/10</span>
             <span class="mission-objective-track" aria-hidden="true"><span class="mission-objective-fill"></span></span>
         </article>
@@ -160,49 +176,55 @@
     </section>
 
     <section id="endScreen" class="end-screen" hidden>
-        <div id="endCard" class="end-card">
-            <h2 id="endTitle"></h2>
-            <p id="endMessage"></p>
-            <section class="mission-end-report" aria-labelledby="missionReportTitle">
-                <h3 id="missionReportTitle">RELATÓRIO DA JOGADA</h3>
-                <dl>
-                    <div><dt>Pontuação</dt><dd id="reportScore">0</dd></div>
-                    <div><dt>Forças inimigas destruídas</dt><dd id="reportTargetsHit">0/160</dd></div>
-                    <div><dt>Forças inimigas perdidas</dt><dd id="reportTargetsLost">0</dd></div>
-                    <div><dt>Pessoas resgatadas</dt><dd id="reportPeopleRescued">0/10</dd></div>
-                    <div><dt>Integridade da aeronave</dt><dd id="reportIntegrity">100%</dd></div>
-                    <div><dt>Vidas restantes</dt><dd id="reportLives">5/5</dd></div>
-                </dl>
-                <h3 class="mission-report-objectives-title">MISSÕES</h3>
-                <ul class="mission-report-objectives">
-                    <li id="reportObjectiveSeventyPercent">
-                        <span>Destruir 70% das forças inimigas <strong id="reportObjectiveSeventyPercentProgress"></strong></span>
-                        <span class="mission-report-objective-result"><span id="reportObjectiveSeventyPercentStatus"></span><span class="mission-report-medal" aria-label="Missão cumprida" hidden>🏅</span><span class="mission-report-failure-icon" aria-label="Missão não cumprida" hidden>👎</span></span>
-                    </li>
-                    <li id="reportObjectiveAllEnemies">
-                        <span>Destruir todas as forças inimigas <strong id="reportObjectiveAllEnemiesProgress"></strong></span>
-                        <span class="mission-report-objective-result"><span id="reportObjectiveAllEnemiesStatus"></span><span class="mission-report-medal" aria-label="Missão cumprida" hidden>🏅</span><span class="mission-report-failure-icon" aria-label="Missão não cumprida" hidden>👎</span></span>
-                    </li>
-                    <li id="reportObjectiveRescue">
-                        <span>Resgatar 10 pessoas <strong id="reportObjectiveRescueProgress"></strong></span>
-                        <span class="mission-report-objective-result"><span id="reportObjectiveRescueStatus"></span><span class="mission-report-medal" aria-label="Missão cumprida" hidden>🏅</span><span class="mission-report-failure-icon" aria-label="Missão não cumprida" hidden>👎</span></span>
-                    </li>
-                    <li id="reportObjectiveIntegrity">
-                        <span>Manter 100% de integridade da aeronave</span>
-                        <span class="mission-report-objective-result"><span id="reportObjectiveIntegrityStatus"></span><span class="mission-report-medal" aria-label="Missão cumprida" hidden>🏅</span><span class="mission-report-failure-icon" aria-label="Missão não cumprida" hidden>👎</span></span>
-                    </li>
-                </ul>
-            </section>
-            <section class="mission-leaderboard" aria-labelledby="leaderboardTitle">
-                <h3 id="leaderboardTitle">RANKING</h3>
-                <p id="leaderboardStatus" role="status" aria-live="polite">Carregando ranking...</p>
-                <ol id="leaderboardEntries"></ol>
-                <p id="leaderboardPlayerRank" class="leaderboard-player-rank"></p>
-            </section>
-            <p id="endActionError" role="alert" hidden></p>
-            <div class="end-card-actions">
-                <button id="restartButton" class="btn-restart" type="button">[ VOLTAR AO INÍCIO ]</button>
-                <button id="newPlayerButton" class="btn-restart" type="button" hidden>NOVO JOGADOR</button>
+        <div class="mission-end-layout">
+            <aside class="score-tiebreak-notice" role="note">
+                <h3>AVISO</h3>
+                <p>O critério utilizado para desempate de score, será considerado o número de vitórias obtidas.</p>
+            </aside>
+            <div id="endCard" class="end-card">
+                <h2 id="endTitle"></h2>
+                <p id="endMessage"></p>
+                <section class="mission-end-report" aria-labelledby="missionReportTitle">
+                    <h3 id="missionReportTitle">RELATÓRIO DA JOGADA</h3>
+                    <dl>
+                        <div><dt>Pontuação</dt><dd id="reportScore">0</dd></div>
+                        <div><dt>Forças inimigas destruídas</dt><dd id="reportTargetsHit">0/160</dd></div>
+                        <div><dt>Forças inimigas perdidas</dt><dd id="reportTargetsLost">0</dd></div>
+                        <div><dt>Pessoas resgatadas</dt><dd id="reportPeopleRescued">0/10</dd></div>
+                        <div><dt>Integridade da aeronave</dt><dd id="reportIntegrity">100%</dd></div>
+                        <div><dt>Vidas restantes</dt><dd id="reportLives">5/5</dd></div>
+                    </dl>
+                    <h3 class="mission-report-objectives-title">MISSÕES</h3>
+                    <ul class="mission-report-objectives">
+                        <li id="reportObjectiveSeventyPercent">
+                            <span>Destruir 70% das forças inimigas <strong id="reportObjectiveSeventyPercentProgress"></strong></span>
+                            <span class="mission-report-objective-result"><span id="reportObjectiveSeventyPercentStatus"></span><span class="mission-report-medal" aria-label="Missão cumprida" hidden>🏅</span><span class="mission-report-failure-icon" aria-label="Missão não cumprida" hidden>👎</span></span>
+                        </li>
+                        <li id="reportObjectiveAllEnemies">
+                            <span>Destruir todas as forças inimigas <strong id="reportObjectiveAllEnemiesProgress"></strong></span>
+                            <span class="mission-report-objective-result"><span id="reportObjectiveAllEnemiesStatus"></span><span class="mission-report-medal" aria-label="Missão cumprida" hidden>🏅</span><span class="mission-report-failure-icon" aria-label="Missão não cumprida" hidden>👎</span></span>
+                        </li>
+                        <li id="reportObjectiveRescue">
+                            <span>Resgatar 10 pessoas <strong id="reportObjectiveRescueProgress"></strong></span>
+                            <span class="mission-report-objective-result"><span id="reportObjectiveRescueStatus"></span><span class="mission-report-medal" aria-label="Missão cumprida" hidden>🏅</span><span class="mission-report-failure-icon" aria-label="Missão não cumprida" hidden>👎</span></span>
+                        </li>
+                        <li id="reportObjectiveIntegrity">
+                            <span>Manter 100% de integridade da aeronave</span>
+                            <span class="mission-report-objective-result"><span id="reportObjectiveIntegrityStatus"></span><span class="mission-report-medal" aria-label="Missão cumprida" hidden>🏅</span><span class="mission-report-failure-icon" aria-label="Missão não cumprida" hidden>👎</span></span>
+                        </li>
+                    </ul>
+                </section>
+                <section class="mission-leaderboard" aria-labelledby="leaderboardTitle">
+                    <h3 id="leaderboardTitle">RANKING</h3>
+                    <p id="leaderboardStatus" role="status" aria-live="polite">Carregando ranking...</p>
+                    <ol id="leaderboardEntries"></ol>
+                    <p id="leaderboardPlayerRank" class="leaderboard-player-rank"></p>
+                </section>
+                <p id="endActionError" role="alert" hidden></p>
+                <div class="end-card-actions">
+                    <button id="restartButton" class="btn-restart" type="button">[ VOLTAR AO INÍCIO ]</button>
+                    <button id="newPlayerButton" class="btn-restart" type="button" hidden>NOVO JOGADOR</button>
+                </div>
             </div>
         </div>
         <div id="endActionProgress" class="opening-progress end-action-progress" role="progressbar" aria-label="Processando a resposta" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>
@@ -227,6 +249,10 @@
         <div class="opening-progress-fill credential-progress-fill"></div>
     </div>
 <div id="surveyModal" class="survey-overlay" role="dialog" aria-modal="true" aria-labelledby="surveyTitle" aria-hidden="true" hidden>
+    <aside id="nonStudentNotice" class="non-student-notice" role="status" aria-live="polite" hidden>
+        <h3>AVISO</h3>
+        Jogadores não alunos podem jogar, mas não participarão do ranking.
+    </aside>
     <form id="surveyForm" class="survey-panel">
         <h2 id="surveyTitle">CREDENCIAIS DO PILOTO</h2>
         <div class="survey-fields">
@@ -316,6 +342,7 @@
     let playerFirstName = '';
     let registrationSaved = false;
     let currentSurveyId = null;
+    let currentPlayerIsStudent = false;
     let savedRegistrationPayload = null;
     let pendingMissionResult = null;
     let pendingMatchSavePromise = null;
@@ -2764,7 +2791,8 @@
         window.clearTimeout(liveRankingUpdateTimeout);
         document.getElementById('gamePlayerName').textContent =
             savedRegistrationPayload?.name.trim() || playerFirstName || '—';
-        document.getElementById('gamePlayerRank').textContent = '...';
+        document.getElementById('gamePlayerRank').textContent =
+            currentPlayerIsStudent ? '...' : 'NÃO PARTICIPANTE';
         const gameContainer = document.querySelector('.game-container');
         gameContainer.classList.remove('is-defeated', 'is-victorious');
         gameContainer.classList.add('is-playing');
@@ -2820,7 +2848,9 @@
         peopleRescued = 0;
         missionScore = 0;
         updateMissionScoreCard();
-        liveRankingInterval = window.setInterval(updateLiveRanking, 10000);
+        if (currentPlayerIsStudent) {
+            liveRankingInterval = window.setInterval(updateLiveRanking, 10000);
+        }
         damageTaken = false;
         wavesSpawned = 0;
         laserCard.classList.remove('is-unlocking');
@@ -2831,7 +2861,7 @@
         nextEnemyShot = performance.now() + 700;
         invulnerableUntil = 0;
         arcadeActive = true;
-        void updateLiveRanking();
+        if (currentPlayerIsStudent) void updateLiveRanking();
         spawnEnemyWave(1);
         updateCombatStatus();
         arcadeLastFrame = performance.now();
@@ -2948,7 +2978,7 @@
     }
 
     async function updateLiveRanking() {
-        if (!currentSurveyId || !arcadeActive) return;
+        if (!currentSurveyId || !currentPlayerIsStudent || !arcadeActive) return;
         const requestId = ++liveRankingRequestId;
         try {
             const response = await fetch(
@@ -3045,7 +3075,7 @@
         updateMissionObjectives();
     }
 
-    function updateMissionObjectives(missionEnded = false) {
+    function updateMissionObjectives() {
         const rescuedObjective = document.getElementById('rescueObjective');
         const seventyPercentObjective = document.getElementById('seventyPercentObjective');
         const allEnemiesObjective = document.getElementById('allEnemiesObjective');
@@ -3059,8 +3089,11 @@
             );
         };
         const setObjectiveState = (objective, state) => {
-            objective.classList.toggle('is-complete', state === 'complete');
-            objective.classList.toggle('is-failed', state === 'failed');
+            const isComplete = state === 'complete';
+            objective.classList.toggle('is-complete', isComplete);
+            objective.classList.toggle('is-failed', !isComplete);
+            objective.querySelector('.mission-objective-medal').hidden = !isComplete;
+            objective.querySelector('.mission-objective-failure').hidden = isComplete;
         };
         const seventyPercentTarget = Math.ceil(enemyTargetCount * 0.7);
         const rescueProgress = Math.min(peopleRescued, rescueTargetCount) / rescueTargetCount;
@@ -3084,18 +3117,60 @@
 
         const noDamageStatus = document.getElementById('noDamageObjectiveStatus');
         noDamageStatus.textContent = damageTaken ? '0%' : '100%';
-        setObjectiveState(
-            noDamageObjective,
-            damageTaken ? 'failed' : missionEnded && targetsHit > 0 ? 'complete' : 'active'
-        );
+        setObjectiveState(noDamageObjective, damageTaken ? 'failed' : 'complete');
         updateProgress(noDamageObjective, damageTaken ? 0 : 1);
     }
 
     let openingTransitionTriggered = false;
     let openingProgressAnimationFrame = 0;
+    let nonStudentNoticeAnimationId = 0;
+    function setNonStudentNoticeVisible(visible) {
+        const notice = document.getElementById('nonStudentNotice');
+        const animationId = ++nonStudentNoticeAnimationId;
+
+        if (visible) {
+            notice.hidden = false;
+            notice.setAttribute('aria-hidden', 'false');
+            notice.classList.remove('non-student-notice-exiting');
+            notice.getBoundingClientRect();
+            notice.classList.add('non-student-notice-entering');
+        } else if (!notice.hidden) {
+            notice.classList.remove('non-student-notice-entering');
+            notice.classList.add('non-student-notice-exiting');
+        } else {
+            return Promise.resolve();
+        }
+
+        const animationName = visible
+            ? 'non-student-notice-enter'
+            : 'non-student-notice-exit';
+        return new Promise((resolve) => {
+            let timeoutId;
+            const finishAnimation = (event) => {
+                if (event && (event.target !== notice || event.animationName !== animationName)) return;
+                notice.removeEventListener('animationend', finishAnimation);
+                window.clearTimeout(timeoutId);
+                if (animationId === nonStudentNoticeAnimationId) {
+                    notice.classList.remove(
+                        'non-student-notice-entering',
+                        'non-student-notice-exiting'
+                    );
+                    if (!visible) {
+                        notice.hidden = true;
+                        notice.setAttribute('aria-hidden', 'true');
+                    }
+                }
+                resolve();
+            };
+            notice.addEventListener('animationend', finishAnimation);
+            timeoutId = window.setTimeout(() => finishAnimation(), 400);
+        });
+    }
+
     function updateStudentCredentialFields() {
         const surveyForm = document.getElementById('surveyForm');
         const isStudent = surveyForm.querySelector('input[name="is_student"]:checked')?.value === 'true';
+        void setNonStudentNoticeVisible(!isStudent);
         const schoolField = document.querySelector('#schoolField select');
         const ageFieldset = document.getElementById('ageFieldset');
         const educationLevelFieldset = document.getElementById('educationLevelFieldset');
@@ -3129,6 +3204,7 @@
         registrationModal.setAttribute('aria-busy', 'false');
         registrationSaved = false;
         currentSurveyId = null;
+        currentPlayerIsStudent = false;
         savedRegistrationPayload = null;
         playerFirstName = '';
     }
@@ -3278,7 +3354,7 @@
         characterSpeech.hidden = true;
         const gameContainer = document.querySelector('.game-container');
         gameContainer.classList.remove('is-playing');
-        updateMissionObjectives(true);
+        updateMissionObjectives();
         document.getElementById('missionObjectives').hidden = true;
         endCard.classList.toggle('won', won);
         document.getElementById('endTitle').textContent = won
@@ -3361,6 +3437,11 @@
 
     document.getElementById('startButton').addEventListener('click', startMission);
     async function savePendingMissionResult() {
+        if (!currentPlayerIsStudent) {
+            pendingMissionResult = null;
+            savedMatchId = null;
+            return null;
+        }
         if (pendingMatchSavePromise) return pendingMatchSavePromise;
         if (!pendingMissionResult) return savedMatchId ? { id: savedMatchId } : null;
         if (!currentSurveyId) {
@@ -3384,6 +3465,12 @@
 
     async function loadMissionEndRanking() {
         const status = document.getElementById('leaderboardStatus');
+        if (!currentPlayerIsStudent) {
+            document.getElementById('leaderboardEntries').replaceChildren();
+            document.getElementById('leaderboardPlayerRank').textContent = '';
+            status.textContent = 'Jogadores não alunos podem jogar, mas não participarão do ranking.';
+            return;
+        }
         try {
             const savedMatch = await savePendingMissionResult();
             if (!savedMatch?.id) {
@@ -3499,6 +3586,7 @@
             endScreen.hidden = true;
             registrationSaved = false;
             currentSurveyId = null;
+            currentPlayerIsStudent = false;
             savedRegistrationPayload = null;
             playerFirstName = '';
             surveyForm.reset();
@@ -3597,6 +3685,7 @@
 
             registrationSaved = true;
             currentSurveyId = result.id;
+            currentPlayerIsStudent = isStudent;
             savedRegistrationPayload = { ...payload };
             playerFirstName = payload.name.trim().split(/\s+/)[0];
             const surveyModal = document.getElementById('surveyModal');
@@ -3605,6 +3694,7 @@
             const credentialProgressFill = credentialProgress.querySelector('.credential-progress-fill');
             surveyModal.setAttribute('aria-busy', 'true');
             form.classList.add('credential-card-confirmed');
+            await setNonStudentNoticeVisible(false);
             await new Promise((resolve) => window.setTimeout(resolve, 2000));
             await new Promise((resolve) => {
                 const finishExit = (animationEvent) => {
