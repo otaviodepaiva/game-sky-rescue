@@ -1387,23 +1387,14 @@
                 });
             });
 
-            const hp = Math.max(0, carrier.hp ?? carrier.maxHp);
-            const maxHp = carrier.maxHp;
             const barWidth = width * 0.72;
             const barY = -length / 2 - 20;
             arcadeContext.fillStyle = 'rgba(10, 15, 25, 0.9)';
             arcadeContext.fillRect(-barWidth / 2 - 3, barY - 3, barWidth + 6, 15);
-            arcadeContext.fillStyle = '#351719';
-            arcadeContext.fillRect(-barWidth / 2, barY, barWidth, 9);
-            arcadeContext.fillStyle = hp / maxHp > 0.5 ? '#22c55e' : hp / maxHp > 0.25 ? '#eab308' : '#ef4444';
-            arcadeContext.fillRect(-barWidth / 2, barY, barWidth * (hp / maxHp), 9);
-            arcadeContext.strokeStyle = '#fff';
-            arcadeContext.lineWidth = 1;
-            arcadeContext.strokeRect(-barWidth / 2, barY, barWidth, 9);
-            arcadeContext.fillStyle = '#fff';
+            arcadeContext.fillStyle = '#ff8b67';
             arcadeContext.font = 'bold 10px "Courier New", monospace';
             arcadeContext.textAlign = 'center';
-            arcadeContext.fillText(`ENERGIA [${hp}/${maxHp}]`, 0, barY - 5);
+            arcadeContext.fillText('INDESTRUTÍVEL', 0, barY + 8);
         }
 
         arcadeContext.restore();
@@ -2374,19 +2365,14 @@
             }
         });
 
-        const finishCarrierBoss = (enemy, wasDestroyed) => {
+        const finishCarrierBoss = (enemy) => {
             if (!enemy.alive) return;
             enemy.alive = false;
             carrierBossDefeated = true;
             nextPostBossSupportCarrierAt = timestamp;
             missionScore += carrierBossPoints;
-            if (wasDestroyed) {
-                targetsHit++;
-                showCharacterSpeech('Porta-aviões inimigo destruído! Continue a missão; a aeronave gigante aparecerá no confronto final.');
-            } else {
-                targetsLost++;
-                showCharacterSpeech('O porta-aviões gigante cruzou o cenário. Continue a missão; a aeronave gigante aparecerá no confronto final.');
-            }
+            targetsLost++;
+            showCharacterSpeech('O porta-aviões gigante cruzou o cenário. Continue a missão; a aeronave gigante aparecerá no confronto final.');
             updateMissionScoreCard();
             updateCombatStatus();
         };
@@ -2422,7 +2408,7 @@
                 if (timestamp >= enemy.nextCannonAt) fireCarrierBossCannons(enemy, timestamp);
                 if (timestamp >= enemy.nextLaserBarrageAt) fireCarrierBossLaserBarrage(enemy, timestamp);
                 if (enemy.y - enemy.height / 2 > arcadeHeight) {
-                    finishCarrierBoss(enemy, false);
+                    finishCarrierBoss(enemy);
                 }
                 return;
             }
@@ -2501,15 +2487,13 @@
                 height,
                 alive: true,
                 isCarrierBoss: true,
-                hp: 20,
-                maxHp: 20,
                 phase: Math.random() * Math.PI * 2,
-                descentSpeed: 90,
+                descentSpeed: aircraftCarrierSpeed,
                 combatY: arcadeHeight * 0.2,
                 combatStartedAt: null,
                 combatDuration: 15000,
                 retreating: false,
-                retreatSpeed: 180,
+                retreatSpeed: aircraftCarrierSpeed,
                 nextCannonAt: timestamp + 900,
                 nextLaserBarrageAt: timestamp + 1500,
                 laserVolleyIndex: 0
@@ -2651,9 +2635,6 @@
             } else if (target.isCarrierBoss) {
                 explosions.push({ x: impactX, y: impactY, startedAt: timestamp });
                 playArcadeSound('enemyExplosion');
-                target.hp = Math.max(0, target.hp - damage);
-                target.lastHitAt = timestamp;
-                if (target.hp === 0) finishCarrierBoss(target, true);
                 return;
             } else {
                 target.energy = Math.max(0, (target.energy ?? 1) - damage);
